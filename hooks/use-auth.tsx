@@ -1,109 +1,169 @@
-"use client"
+'use client';
 
-import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
-import { getLoggedInUserId, setLoggedInUserId, getUsers, getUserById, type User } from "@/lib/local-storage-utils"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, createContext, useContext } from 'react';
+import { authApi } from '@/lib/api';
 
-interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => boolean
-  logout: () => void
-  register: (name: string, email: string, password: string) => boolean
-  isAuthenticated: boolean
-  isAdmin: boolean
-  isBuyer: boolean
-  isSeller: boolean
-  loading: boolean
+interface User {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  emailVerified: boolean;
+  accountStatus: 'pending' | 'active' | 'banned';
+  role: 'buyer' | 'farmer' | 'admin';
+  farmerApplicationStatus?: 'pending' | 'approved' | 'rejected';
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (
+    firstname: string,
+    lastname: string,
+    email: string,
+    password: string,
+    role?: 'buyer' | 'farmer' | 'admin',
+  ) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isBuyer: boolean;
+  isSeller: boolean;
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const userId = getLoggedInUserId()
-    if (userId) {
-      const currentUser = getUserById(userId)
-      if (currentUser) {
-        setUser(currentUser)
-      } else {
-        setLoggedInUserId(null) // Clear invalid user ID
-      }
-    }
-    setLoading(false)
-  }, [])
+    const initializeAuth = () => {
+      console.log('🔐 Initializing auth...');
+      try {
+        const userData = localStorage.getItem('agronet_user');
+        console.log('🔍 Found user data in localStorage:', !!userData);
 
-  const login = (email: string, password: string): boolean => {
-    const users = getUsers()
-    const foundUser = users.find((u) => u.email === email && u.password === password)
-    if (foundUser) {
-      setLoggedInUserId(foundUser.id)
-      setUser(foundUser)
-      return true
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          console.log('✅ Setting user:', parsedUser.email);
+          setUser(parsedUser);
+        } else {
+          console.log('❌ No user data found');
+        }
+      } catch (error) {
+        console.error('❌ Error parsing user data:', error);
+        localStorage.removeItem('agronet_user');
+        localStorage.removeItem('agronet_token');
+      }
+
+      // Always set loading to false after checking localStorage
+      console.log('🏁 Auth initialization complete');
+      setIsLoading(false);
+    };
+
+    // Add a small delay to ensure localStorage is accessible
+    const timer = setTimeout(initializeAuth, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      console.log('🔐 Attempting login for:', email);
+      const response = await authApi.login({ email, password });
+
+      if (response?.user && response?.token) {
+        console.log('✅ Login successful, storing user data');
+        setUser(response.user);
+        localStorage.setItem('agronet_user', JSON.stringify(response.user));
+        localStorage.setItem('agronet_token', response.token);
+        return true;
+      }
+
+      console.log('❌ Login failed: Invalid response');
+      return false;
+    } catch (error) {
+      console.error('❌ Error during login:', error);
+      return false;
     }
-    return false
-  }
+  };
+
+  const register = async (
+    firstname: string,
+    lastname: string,
+    email: string,
+    password: string,
+    role: 'buyer' | 'farmer' | 'admin' = 'buyer',
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await authApi.register({
+        firstname,
+        lastname,
+        email,
+        password,
+        role,
+      });
+
+      if (response?.user && response?.token) {
+        setUser(response.user);
+        localStorage.setItem('agronet_user', JSON.stringify(response.user));
+        localStorage.setItem('agronet_token', response.token);
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        error: response.message || 'Registration failed',
+      };
+    } catch (error: any) {
+      console.error('Error during registration:', error);
+      const errorMessage = error?.message || 'Registration failed';
+      return { success: false, error: errorMessage };
+    }
+  };
 
   const logout = () => {
-    setLoggedInUserId(null)
-    setUser(null)
-    router.push("/login")
-  }
+    setUser(null);
+    localStorage.removeItem('agronet_user');
+    localStorage.removeItem('agronet_token');
+  };
 
-  const register = (name: string, email: string, password: string): boolean => {
-    const users = getUsers()
-    const existingUser = users.find((u) => u.email === email)
-    if (existingUser) {
-      return false // User with this email already exists
-    }
-
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name,
-      email,
-      password,
-      role: "buyer", // Default role
-      isVerifiedSeller: false,
-    }
-    users.push(newUser)
-    localStorage.setItem(
-      "agronet_data",
-      JSON.stringify({ ...JSON.parse(localStorage.getItem("agronet_data") || "{}"), users }),
-    )
-    return true
-  }
-
-  const isAuthenticated = !!user
-  const isAdmin = user?.role === "admin"
-  const isBuyer = user?.role === "buyer"
-  const isSeller = user?.role === "seller"
+  // Helper functions
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'admin';
+  const isBuyer = user?.role === 'buyer';
+  const isSeller = user?.role === 'farmer';
 
   return (
     <AuthContext.Provider
       value={{
         user,
         login,
-        logout,
         register,
+        logout,
+        isLoading,
         isAuthenticated,
         isAdmin,
         isBuyer,
         isSeller,
-        loading,
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }

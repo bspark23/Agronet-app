@@ -1,11 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+i  }
+
+  if (error) {} from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { useMessages } from "@/hooks/use-messages-api"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { getChats, getUsers, type Chat, type User } from "@/lib/local-storage-utils"
+import type { MessageThread, User } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageSquare, Loader2 } from "lucide-react"
@@ -14,39 +17,48 @@ import { motion } from "framer-motion"
 export default function ChatsPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [userChats, setUserChats] = useState<Chat[]>([])
-  const [loading, setLoading] = useState(true)
+  const { 
+    threads, 
+    loading: messagesLoading, 
+    error, 
+    loadThreads 
+  } = useMessages()
 
   useEffect(() => {
     if (!authLoading) {
       if (!isAuthenticated || !user) {
         router.push("/login")
       } else {
-        loadChats()
-        setLoading(false)
+        loadThreads()
       }
     }
-  }, [isAuthenticated, user, authLoading, router])
+  }, [isAuthenticated, user, authLoading, router, loadThreads])
 
-  const loadChats = () => {
-    const allChats = getChats()
-    const filteredChats = allChats
-      .filter((chat) => chat.participants.includes(user?.id || ""))
-      .sort((a, b) => b.lastMessageAt - a.lastMessageAt) // Sort by most recent message
-    setUserChats(filteredChats)
+  const getOtherParticipant = (thread: MessageThread): User | undefined => {
+    // Get the other participant (not the current user)
+    const otherParticipant = thread.buyerId?._id === user?.id 
+      ? thread.farmerId 
+      : thread.buyerId
+    return otherParticipant as User
   }
 
-  const getOtherParticipant = (chat: Chat): User | undefined => {
-    const otherParticipantId = chat.participants.find((id) => id !== user?.id)
-    return otherParticipantId ? getUsers().find((u) => u.id === otherParticipantId) : undefined
-  }
-
-  const getLastMessagePreview = (chat: Chat): string => {
-    if (chat.messages.length === 0) return "No messages yet."
-    const lastMessage = chat.messages[chat.messages.length - 1]
-    const sender = getUsers().find((u) => u.id === lastMessage.senderId)
-    const senderName = sender?.id === user?.id ? "You" : sender?.name.split(" ")[0] || "Unknown"
-    return `${senderName}: ${lastMessage.content.substring(0, 50)}${lastMessage.content.length > 50 ? "..." : ""}`
+  const formatLastMessageTime = (date: Date | string): string => {
+    const messageDate = new Date(date)
+    const now = new Date()
+    const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60)
+    
+    if (diffInHours < 24) {
+      return messageDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      })
+    } else {
+      return messageDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
   }
 
   const formatTimestamp = (timestamp: number): string => {
@@ -64,7 +76,7 @@ export default function ChatsPage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (authLoading || messagesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
@@ -74,6 +86,26 @@ export default function ChatsPage() {
 
   if (!isAuthenticated || !user) {
     return null // Should be redirected by useEffect
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8 md:px-6">
+          <div className="text-center text-red-600">
+            <p>Error loading chats: {error}</p>
+            <button 
+              onClick={loadThreads}
+              className="mt-4 px-4 py-2 bg-agronetGreen text-white rounded hover:bg-green-600"
+            >
+              Try Again
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (
@@ -89,7 +121,7 @@ export default function ChatsPage() {
           Your Chats
         </motion.h1>
 
-        {userChats.length === 0 ? (
+        {threads.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -98,36 +130,40 @@ export default function ChatsPage() {
           >
             <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <p>You don&apos;t have any active chats yet.</p>
-            <p>Start by messaging a seller from a product page!</p>
+            <p>Start by messaging a farmer from a product page!</p>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userChats.map((chat, index) => {
-              const otherParticipant = getOtherParticipant(chat)
+            {threads.map((thread, index) => {
+              const otherParticipant = getOtherParticipant(thread)
               if (!otherParticipant) return null
 
               return (
                 <motion.div
-                  key={chat.id}
+                  key={thread._id}
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
                 >
                   <Card
                     className="cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                    onClick={() => router.push(`/chat/${chat.id}`)}
+                    onClick={() => router.push(`/chat/${thread._id}`)}
                   >
                     <CardContent className="flex items-center p-4 gap-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src="/placeholder.svg?height=48&width=48" alt={otherParticipant.name} />
-                        <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarImage src="/placeholder.svg?height=48&width=48" alt={otherParticipant.fullName} />
+                        <AvatarFallback>{otherParticipant.fullName?.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 overflow-hidden">
                         <div className="flex justify-between items-center">
-                          <h3 className="font-semibold text-lg truncate">{otherParticipant.name}</h3>
-                          <span className="text-xs text-gray-500">{formatTimestamp(chat.lastMessageAt)}</span>
+                          <h3 className="font-semibold text-lg truncate">{otherParticipant.fullName}</h3>
+                          <span className="text-xs text-gray-500">
+                            {formatLastMessageTime(thread.lastMessageAt)}
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-600 truncate">{getLastMessagePreview(chat)}</p>
+                        <p className="text-sm text-gray-600 truncate">
+                          {otherParticipant.role === 'farmer' ? 'Farmer' : 'Buyer'} • Click to chat
+                        </p>
                       </div>
                     </CardContent>
                   </Card>

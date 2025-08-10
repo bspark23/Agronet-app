@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { getProducts, getVerifiedSellers } from "@/lib/local-storage-utils"
+import { productsApi } from '@/lib/api';
 import type { Product } from "@/lib/types"
 import { ProductCard } from "@/components/product-card"
 import { Input } from "@/components/ui/input"
@@ -19,51 +19,69 @@ export default function ProductsPage() {
   const [priceFilter, setPriceFilter] = useState("all")
   const [sellerStatusFilter, setSellerStatusFilter] = useState("all")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setAllProducts(getProducts())
-    setLoading(false)
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const products = await productsApi.getProducts();
+        setAllProducts(products);
+        setError(null);
+      } catch (err: any) {
+        console.error('Error fetching products:', err);
+        setError(err.message || 'Failed to load products');
+        // Fallback to empty array if API fails
+        setAllProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [])
 
   useEffect(() => {
-    let currentProducts = [...allProducts]
+    let currentProducts = [...allProducts];
 
     // Filter by search term
     if (searchTerm) {
       currentProducts = currentProducts.filter(
-        (product) =>
+        product =>
           product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           product.description.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+      );
     }
 
     // Filter by category
-    if (categoryFilter !== "all") {
-      currentProducts = currentProducts.filter((product) => product.category === categoryFilter)
+    if (categoryFilter !== 'all') {
+      currentProducts = currentProducts.filter(
+        product => product.category === categoryFilter,
+      );
     }
 
     // Filter by price
-    if (priceFilter !== "all") {
+    if (priceFilter !== 'all') {
       currentProducts.sort((a, b) => {
-        if (priceFilter === "low-to-high") {
-          return a.price - b.price
+        if (priceFilter === 'low-to-high') {
+          return a.price - b.price;
         } else {
           // high-to-low
-          return b.price - a.price
+          return b.price - a.price;
         }
-      })
+      });
     }
 
-    // Filter by seller status
-    if (sellerStatusFilter !== "all") {
-      const verifiedSellerIds = new Set(getVerifiedSellers().map((s) => s.id))
-      currentProducts = currentProducts.filter((product) => {
-        const isVerified = verifiedSellerIds.has(product.sellerId)
-        return sellerStatusFilter === "verified" ? isVerified : !isVerified
-      })
-    }
+    // Filter by seller status - For now, we'll skip this filter since we need to implement seller verification
+    // if (sellerStatusFilter !== "all") {
+    //   const verifiedSellerIds = new Set(getVerifiedSellers().map((s) => s.id))
+    //   currentProducts = currentProducts.filter((product) => {
+    //     const isVerified = verifiedSellerIds.has(product.sellerId)
+    //     return sellerStatusFilter === "verified" ? isVerified : !isVerified
+    //   })
+    // }
 
-    setFilteredProducts(currentProducts)
+    setFilteredProducts(currentProducts);
   }, [allProducts, searchTerm, categoryFilter, priceFilter, sellerStatusFilter])
 
   const allCategories = Array.from(new Set(allProducts.map((p) => p.category)))
@@ -74,6 +92,23 @@ export default function ProductsPage() {
         <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
       </div>
     )
+  }
+
+  if (error) {
+    return (
+      <div className='flex flex-col min-h-screen'>
+        <Navbar />
+        <main className='flex-1 container mx-auto px-4 py-8 md:px-6'>
+          <div className='text-center'>
+            <h1 className='text-2xl font-bold text-red-600 mb-4'>
+              Error Loading Products
+            </h1>
+            <p className='text-gray-600'>{error}</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (

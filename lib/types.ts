@@ -1,61 +1,172 @@
-export type UserRole = "buyer" | "seller" | "admin"
+// User types
+export type UserRole = 'buyer' | 'farmer' | 'admin';
+export type AccountStatus = 'pending' | 'active' | 'banned';
+export type FarmerApplicationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface User {
-  id: string
-  name: string
-  email: string
-  password?: string // Only for simulation, never store in real app
-  role: UserRole
-  isVerifiedSeller?: boolean // For sellers
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  emailVerified: boolean;
+  accountStatus: AccountStatus;
+  role: UserRole;
+  farmerApplicationStatus?: FarmerApplicationStatus;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
+// Product types
 export interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  quantity: number
-  image: string // URL
-  sellerId: string
-  category: string
+  _id: string;
+  farmerId: string;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  images: string[];
+  location: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  ratingsAverage: number;
+  ratingsCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface SellerApplication {
-  id: string
-  userId: string
-  fullName: string
-  email: string
-  reason: string
-  status: "pending" | "approved" | "rejected"
-  appliedAt: number // Timestamp
+// Order types
+export type OrderStatus = 'pending' | 'shipped' | 'delivered';
+
+export interface Order {
+  _id: string;
+  productId: string;
+  buyerId: string;
+  quantity: number;
+  totalPrice: number;
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
+// Review types
+export interface Review {
+  _id: string;
+  productId: string;
+  buyerId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Message types
 export interface Message {
-  id: string
-  senderId: string
-  receiverId: string
-  content: string
-  timestamp: number
+  _id: string;
+  threadId: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageThread {
+  _id: string;
+  buyerId: string;
+  farmerId: string;
+  lastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Farmer application types
+export interface FarmerApplication {
+  _id: string;
+  userId: string;
+  idCardUrl: string;
+  proofOfFarmUrl: string;
+  status: FarmerApplicationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Frontend specific types
+export interface WishlistItem {
+  userId: string;
+  productId: string;
 }
 
 export interface Chat {
-  id: string
-  participants: [string, string] // [userId1, userId2]
-  messages: Message[]
-  lastMessageAt: number
+  id: string;
+  participants: [string, string]; // [userId1, userId2]
+  messages: Message[];
+  lastMessageAt: number;
 }
 
-export interface WishlistItem {
-  userId: string
-  productId: string
+// Form types
+export interface LoginForm {
+  email: string;
+  password: string;
 }
 
-export interface LocalStorageData {
-  users: User[]
-  products: Product[]
-  sellerApplications: SellerApplication[]
-  chats: Chat[]
-  wishlist: WishlistItem[]
-  loggedInUserId: string | null
-  adminNotification: boolean // Flag for new seller applications
+export interface RegisterForm {
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+}
+
+export interface CreateProductForm {
+  farmerId: string;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  images: string[];
+  location: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+}
+
+export interface CreateOrderForm {
+  productId: string;
+  buyerId: string;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface CreateReviewForm {
+  productId: string;
+  buyerId: string;
+  rating: number;
+  comment: string;
+}
+
+export interface CreateFarmerApplicationForm {
+  userId: string;
+  idCardUrl: string;
+  proofOfFarmUrl: string;
 }

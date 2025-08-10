@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { getProducts, setProducts, generateId, getProductById } from "@/lib/local-storage-utils"
+import { useProducts } from '@/hooks/use-products-api';
 import type { Product } from "@/lib/types"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -19,7 +19,14 @@ import Image from "next/image"
 import { Loader2 } from "lucide-react"
 
 export default function PostProductPage() {
-  const { user, isAuthenticated, isSeller, isAdmin, loading: authLoading } = useAuth()
+  const {
+    user,
+    isAuthenticated,
+    isSeller,
+    isAdmin,
+    isLoading: authLoading,
+  } = useAuth();
+  const { products, createProduct, updateProduct, getProduct } = useProducts();
   const router = useRouter()
   const searchParams = useSearchParams()
   const productIdToEdit = searchParams.get("id")
@@ -35,93 +42,143 @@ export default function PostProductPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!authLoading) {
+    const loadData = async () => {
+      if (authLoading) return;
+
       if (!isAuthenticated || (!isSeller && !isAdmin)) {
-        router.push("/login")
+        router.push('/login');
         toast({
-          title: "Access Denied",
-          description: "You must be a seller or admin to post products.",
-          variant: "destructive",
-        })
-      } else {
-        if (productIdToEdit) {
-          const product = getProductById(productIdToEdit)
-          if (product && (product.sellerId === user?.id || isAdmin)) {
-            setName(product.name)
-            setDescription(product.description)
-            setPrice(product.price.toString())
-            setQuantity(product.quantity.toString())
-            setImage(product.image)
-            setCategory(product.category)
-            setIsEditing(true)
+          title: 'Access Denied',
+          description: 'You must be a seller or admin to post products.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (productIdToEdit) {
+        try {
+          const product = await getProduct(productIdToEdit);
+          if (product && (product.farmerId === user?._id || isAdmin)) {
+            setName(product.name);
+            setDescription(product.description);
+            setPrice(product.price.toString());
+            setQuantity(product.quantity.toString());
+            setImage(product.images[0] || '');
+            setCategory(''); // Categories not yet implemented
+            setIsEditing(true);
           } else {
             toast({
-              title: "Product Not Found or Unauthorized",
-              description: "You cannot edit this product.",
-              variant: "destructive",
-            })
-            router.push("/dashboard/seller")
+              title: 'Product Not Found or Unauthorized',
+              description: 'You cannot edit this product.',
+              variant: 'destructive',
+            });
+            router.push('/dashboard/seller');
           }
+        } catch (error) {
+          console.error('Error loading product for editing:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load product for editing.',
+            variant: 'destructive',
+          });
+          router.push('/dashboard/seller');
         }
-        setLoading(false)
       }
-    }
-  }, [isAuthenticated, isSeller, isAdmin, user, productIdToEdit, authLoading, router, toast])
+
+      setLoading(false);
+    };
+
+    loadData();
+  }, [
+    isAuthenticated,
+    isSeller,
+    isAdmin,
+    user,
+    productIdToEdit,
+    authLoading,
+    router,
+    toast,
+  ]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const reader = new FileReader()
+      const file = e.target.files[0];
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (!user) {
       toast({
-        title: "Error",
-        description: "User not found. Please log in again.",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'User not found. Please log in again.',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    const newProduct: Product = {
-      id: isEditing ? productIdToEdit! : generateId(),
+    const productData = {
+      farmerId: user._id,
       name,
       description,
       price: Number.parseFloat(price),
       quantity: Number.parseInt(quantity),
-      image: image || "/placeholder.svg?height=400&width=600",
-      sellerId: user.id,
-      category,
-    }
+      images: image ? [image] : [],
+      location: {
+        type: 'Point' as const,
+        coordinates: [0, 0] as [number, number], // TODO: Get actual coordinates
+      },
+    };
 
-    let products = getProducts()
-    if (isEditing) {
-      products = products.map((p) => (p.id === productIdToEdit ? newProduct : p))
+    try {
+      if (isEditing && productIdToEdit) {
+        const result = await updateProduct(productIdToEdit, productData);
+        if (result.success) {
+          toast({
+            title: 'Product Updated!',
+            description: 'Your product has been successfully updated.',
+            variant: 'default',
+          });
+          router.push('/dashboard/seller');
+        } else {
+          toast({
+            title: 'Error',
+            description: result.error || 'Failed to update product.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        const result = await createProduct(productData);
+        if (result.success) {
+          toast({
+            title: 'Product Posted!',
+            description: 'Your product is now live on the marketplace.',
+            variant: 'default',
+          });
+          router.push('/dashboard/seller');
+        } else {
+          toast({
+            title: 'Error',
+            description: result.error || 'Failed to create product.',
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting product:', error);
       toast({
-        title: "Product Updated!",
-        description: "Your product has been successfully updated.",
-        variant: "success",
-      })
-    } else {
-      products.push(newProduct)
-      toast({
-        title: "Product Posted!",
-        description: "Your product is now live on the marketplace.",
-        variant: "success",
-      })
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
     }
-    setProducts(products)
-
-    router.push("/dashboard/seller")
-  }
+  };
 
   if (authLoading || loading) {
     return (
