@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AgroNet - Agricultural Marketplace",
+  title: "HarvestLink - Agricultural Marketplace",
   description: "Connect, trade, and chat in the agricultural marketplace.",
   generator: "v0.dev",
 };

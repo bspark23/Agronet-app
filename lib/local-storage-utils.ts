@@ -1,6 +1,9 @@
-import type { LocalStorageData, User, Product, SellerApplication, Chat, WishlistItem, OrderForm, Order, LogisticsCompany } from "./types"
+import type { LocalStorageData, User, Product, SellerApplication, Chat, WishlistItem, OrderForm, Order, LogisticsCompany, Message } from "./types"
 
-const LOCAL_STORAGE_KEY = "agronet_data"
+// Re-export types for easier importing
+export type { User, Product, SellerApplication, Chat, WishlistItem, OrderForm, Order, LogisticsCompany, Message } from "./types"
+
+const LOCAL_STORAGE_KEY = "harvestlink_data"
 
 // Initial data for simulation
 const initialData: LocalStorageData = {

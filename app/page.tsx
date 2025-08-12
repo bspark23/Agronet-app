@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { getProducts } from "@/lib/local-storage-utils"
-import type { Product } from "@/lib/types"
-import { ProductCard } from "@/components/product-card"
-import { ContactForm } from "@/components/contact-form"
-import { HeroSlider } from "@/components/hero-slider"
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { getProducts } from "@/lib/local-storage-utils";
+import type { Product } from "@/lib/types";
+import { ProductCard } from "@/components/product-card";
+import { ContactForm } from "@/components/contact-form";
+import { HeroSlider } from "@/components/hero-slider";
 
 export default function HomePage() {
-  const products: Product[] = getProducts()
-  const featuredProducts = products.slice(0, 8) // Show first 8 as featured
+  const products: Product[] = getProducts();
+  const featuredProducts = products.slice(0, 8); // Show first 8 as featured
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -37,7 +37,8 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-white mb-8 max-w-2xl drop-shadow-md"
             >
-              Connect directly with local farmers and verified sellers for the freshest agricultural products.
+              Connect directly with local farmers and verified sellers for the
+              freshest agricultural products.
             </motion.p>
             <div className="flex gap-4">
               <motion.div
@@ -121,7 +122,7 @@ export default function HomePage() {
               transition={{ duration: 0.5 }}
               className="text-3xl md:text-4xl font-bold text-agronetGreen mb-6"
             >
-              About AgroNet
+              About HarvestLink
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: -20 }}
@@ -130,11 +131,13 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed"
             >
-              AgroNet is dedicated to fostering a direct connection between consumers and local agricultural producers.
-              Our mission is to empower farmers by providing a platform to showcase their fresh, high-quality produce,
-              while offering buyers a transparent and reliable source for their food needs. We believe in supporting
-              local economies, promoting sustainable farming practices, and ensuring everyone has access to nutritious,
-              farm-fresh goods.
+              HarvestLink is dedicated to fostering a direct connection between
+              consumers and local agricultural producers. Our mission is to
+              empower farmers by providing a platform to showcase their fresh,
+              high-quality produce, while offering buyers a transparent and
+              reliable source for their food needs. We believe in supporting
+              local economies, promoting sustainable farming practices, and
+              ensuring everyone has access to nutritious, farm-fresh goods.
             </motion.p>
           </div>
         </section>
@@ -157,5 +160,5 @@ export default function HomePage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }

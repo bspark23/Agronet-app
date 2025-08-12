@@ -276,8 +276,8 @@ export default function CheckoutPage() {
           </Button>
 
           <p className="text-xs text-gray-500 text-center mt-4">
-            By proceeding with payment, you agree to AgroNet's terms of service
-            and privacy policy.
+            By proceeding with payment, you agree to HarvestLink's terms of
+            service and privacy policy.
           </p>
         </motion.div>
       </main>

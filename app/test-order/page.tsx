@@ -4,64 +4,107 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderFormComponent } from "@/components/order-form";
 import { ChatOrderForm } from "@/components/chat-order-form";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import type { Product, OrderForm } from "@/lib/types";
-
-const testProduct: Product = {
-  id: "test-1",
-  name: "Test Tomatoes",
-  description: "Fresh organic tomatoes for testing",
-  price: 5.99,
-  quantity: 10,
-  image: "/placeholder.svg?height=200&width=200",
-  sellerId: "seller-1",
-  category: "Vegetables",
-};
 
 export default function TestOrderPage() {
   const [showOrderForm, setShowOrderForm] = useState(false);
-  const [orderForm, setOrderForm] = useState<OrderForm | null>(null);
+  const [orderForms, setOrderForms] = useState<OrderForm[]>([]);
 
-  const handleOrderSubmit = (form: OrderForm) => {
-    setOrderForm(form);
-    setShowOrderForm(false);
-    console.log("Order submitted:", form);
+  const testProduct: Product = {
+    id: "test-1",
+    name: "Test Product",
+    description: "This is a test product for order form functionality",
+    price: 25.99,
+    quantity: 50,
+    image: "/placeholder.svg?height=400&width=600",
+    sellerId: "seller-1",
+    category: "Test",
   };
 
-  const handleOrderCancel = () => {
+  const handleOrderFormSubmit = (orderForm: OrderForm) => {
+    setOrderForms([...orderForms, orderForm]);
     setShowOrderForm(false);
+    alert("Order form created successfully!");
+  };
+
+  const handleOrderFormCancel = () => {
+    setShowOrderForm(false);
+  };
+
+  const handleAccept = (orderFormId: string) => {
+    setOrderForms(
+      orderForms.map((form) =>
+        form.id === orderFormId
+          ? { ...form, status: "accepted" as const }
+          : form
+      )
+    );
+    alert("Order accepted!");
+  };
+
+  const handleReject = (orderFormId: string) => {
+    setOrderForms(
+      orderForms.map((form) =>
+        form.id === orderFormId
+          ? { ...form, status: "rejected" as const }
+          : form
+      )
+    );
+    alert("Order rejected!");
+  };
+
+  const handleProceedToPayment = (orderFormId: string) => {
+    alert(`Proceeding to payment for order: ${orderFormId}`);
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold text-agronetGreen mb-8">
-        Order Form Test
-      </h1>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-agronetGreen mb-8 text-center">
+          Order Form Test Page
+        </h1>
 
-      <div className="space-y-4">
-        <Button
-          onClick={() => setShowOrderForm(true)}
-          className="bg-agronetOrange hover:bg-agronetOrange/90"
-        >
-          Test Order Form
-        </Button>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Button
+            onClick={() => setShowOrderForm(true)}
+            className="w-full bg-agronetOrange hover:bg-agronetOrange/90 text-white"
+          >
+            Create Test Order Form
+          </Button>
 
-        {orderForm && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">
-              Generated Order Form:
-            </h2>
-            <ChatOrderForm orderForm={orderForm} isCurrentUser={true} />
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Created Order Forms:</h2>
+            {orderForms.length === 0 ? (
+              <p className="text-gray-500">No order forms created yet.</p>
+            ) : (
+              orderForms.map((orderForm) => (
+                <ChatOrderForm
+                  key={orderForm.id}
+                  orderForm={orderForm}
+                  isCurrentUser={false}
+                  onAccept={() => handleAccept(orderForm.id)}
+                  onReject={() => handleReject(orderForm.id)}
+                  onProceedToPayment={() =>
+                    handleProceedToPayment(orderForm.id)
+                  }
+                />
+              ))
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </main>
+      <Footer />
 
       {showOrderForm && (
         <OrderFormComponent
           product={testProduct}
           sellerId="seller-1"
           buyerId="buyer-1"
-          onSubmit={handleOrderSubmit}
-          onCancel={handleOrderCancel}
+          onSubmit={handleOrderFormSubmit}
+          onCancel={handleOrderFormCancel}
         />
       )}
     </div>

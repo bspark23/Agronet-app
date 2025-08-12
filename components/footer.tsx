@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Facebook, Instagram, Twitter } from "lucide-react"
-import { motion } from "framer-motion"
+import Link from "next/link";
+import { Facebook, Instagram, Twitter } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function Footer() {
   return (
@@ -15,16 +15,27 @@ export function Footer() {
     >
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-4">
-          <h3 className="text-lg font-bold">AgroNet</h3>
-          <p className="text-sm">Connecting farmers and buyers for a sustainable future.</p>
+          <h3 className="text-lg font-bold">HarvestLink</h3>
+          <p className="text-sm">
+            Connecting farmers and buyers for a sustainable future.
+          </p>
           <div className="flex space-x-4">
-            <Link href="#" className="hover:text-agronetOrange transition-colors">
+            <Link
+              href="#"
+              className="hover:text-agronetOrange transition-colors"
+            >
               <Facebook className="h-6 w-6" />
             </Link>
-            <Link href="#" className="hover:text-agronetOrange transition-colors">
+            <Link
+              href="#"
+              className="hover:text-agronetOrange transition-colors"
+            >
               <Twitter className="h-6 w-6" />
             </Link>
-            <Link href="#" className="hover:text-agronetOrange transition-colors">
+            <Link
+              href="#"
+              className="hover:text-agronetOrange transition-colors"
+            >
               <Instagram className="h-6 w-6" />
             </Link>
           </div>
@@ -33,27 +44,42 @@ export function Footer() {
           <h3 className="text-lg font-bold">Quick Links</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/products" className="hover:text-agronetOrange transition-colors">
+              <Link
+                href="/products"
+                className="hover:text-agronetOrange transition-colors"
+              >
                 Products
               </Link>
             </li>
             <li>
-              <Link href="/verified-sellers" className="hover:text-agronetOrange transition-colors">
+              <Link
+                href="/verified-sellers"
+                className="hover:text-agronetOrange transition-colors"
+              >
                 Verified Sellers
               </Link>
             </li>
             <li>
-              <Link href="/about" className="hover:text-agronetOrange transition-colors">
+              <Link
+                href="/about"
+                className="hover:text-agronetOrange transition-colors"
+              >
                 About Us
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-agronetOrange transition-colors">
+              <Link
+                href="/contact"
+                className="hover:text-agronetOrange transition-colors"
+              >
                 Contact
               </Link>
             </li>
             <li>
-              <Link href="/apply-seller" className="hover:text-agronetOrange transition-colors">
+              <Link
+                href="/apply-seller"
+                className="hover:text-agronetOrange transition-colors"
+              >
                 Become a Seller
               </Link>
             </li>
@@ -62,11 +88,13 @@ export function Footer() {
         <div className="space-y-4">
           <h3 className="text-lg font-bold">Contact Us</h3>
           <p className="text-sm">123 Farm Road, Rural Town, AG 12345</p>
-          <p className="text-sm">Email: info@agronet.com</p>
+          <p className="text-sm">Email: info@harvestlink.com</p>
           <p className="text-sm">Phone: (123) 456-7890</p>
         </div>
       </div>
-      <div className="mt-8 text-center text-sm">&copy; {new Date().getFullYear()} AgroNet. All rights reserved.</div>
+      <div className="mt-8 text-center text-sm">
+        &copy; {new Date().getFullYear()} HarvestLink. All rights reserved.
+      </div>
     </motion.footer>
-  )
+  );
 }

@@ -14,9 +14,9 @@ import {
   getProducts,
   getOrderForms,
   setOrderForms,
+  generateId,
   type Chat,
   type Message,
-  generateId,
   type User,
   type Product,
   type OrderForm,
@@ -51,6 +51,15 @@ export default function ChatPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Don't render anything until mounted to prevent hydration issues
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!authLoading) {
@@ -141,17 +150,28 @@ export default function ChatPage() {
   };
 
   const handleSendOrderForm = () => {
-    if (sellerProducts.length === 0) {
-      toast({
-        title: "No Products",
-        description: "You need to have products listed to send an order form.",
-        variant: "destructive",
-      });
-      return;
+    // Get all products if seller has none assigned
+    let availableProducts = sellerProducts;
+    if (availableProducts.length === 0) {
+      availableProducts = getProducts().filter((p) => p.sellerId === user?.id);
     }
 
-    // For simplicity, use the first product. In a real app, you'd let the seller choose
-    setSelectedProduct(sellerProducts[0]);
+    // If still no products, create a default product for demo
+    if (availableProducts.length === 0) {
+      const defaultProduct: Product = {
+        id: generateId(),
+        name: "Sample Product",
+        description: "This is a sample product for demonstration",
+        price: 10.0,
+        quantity: 100,
+        image: "/placeholder.svg?height=400&width=600",
+        sellerId: user?.id || "",
+        category: "General",
+      };
+      availableProducts = [defaultProduct];
+    }
+
+    setSelectedProduct(availableProducts[0]);
     setShowOrderForm(true);
   };
 
@@ -314,30 +334,25 @@ export default function ChatPage() {
           </AnimatePresence>
 
           {/* Order Forms */}
-          {mounted &&
-            orderForms.map((orderForm) => (
-              <motion.div
-                key={orderForm.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`flex ${
-                  orderForm.sellerId === user.id
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                <ChatOrderForm
-                  orderForm={orderForm}
-                  isCurrentUser={orderForm.sellerId === user.id}
-                  onAccept={() => handleAcceptOrderForm(orderForm.id)}
-                  onReject={() => handleRejectOrderForm(orderForm.id)}
-                  onProceedToPayment={() =>
-                    handleProceedToPayment(orderForm.id)
-                  }
-                />
-              </motion.div>
-            ))}
+          {orderForms.map((orderForm) => (
+            <motion.div
+              key={orderForm.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`flex ${
+                orderForm.sellerId === user.id ? "justify-end" : "justify-start"
+              }`}
+            >
+              <ChatOrderForm
+                orderForm={orderForm}
+                isCurrentUser={orderForm.sellerId === user.id}
+                onAccept={() => handleAcceptOrderForm(orderForm.id)}
+                onReject={() => handleRejectOrderForm(orderForm.id)}
+                onProceedToPayment={() => handleProceedToPayment(orderForm.id)}
+              />
+            </motion.div>
+          ))}
 
           <div ref={messagesEndRef} />
         </div>
@@ -361,7 +376,7 @@ export default function ChatPage() {
       <Footer />
 
       {/* Order Form Modal */}
-      {mounted && showOrderForm && selectedProduct && otherParticipant && (
+      {showOrderForm && selectedProduct && otherParticipant && (
         <OrderFormComponent
           product={selectedProduct}
           sellerId={user.id}
