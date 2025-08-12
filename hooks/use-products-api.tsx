@@ -33,7 +33,7 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.createProduct(productData);
 
-      if (response.success && response.data) {
+      if (response.data) {
         const newProduct = response.data;
         setProductsState(prev => [...prev, newProduct]);
         return { success: true, product: newProduct };
@@ -41,7 +41,7 @@ export function useProducts() {
 
       return {
         success: false,
-        error: response.error || response.message || 'Failed to create product',
+        error: response.message || 'Failed to create product',
       };
     } catch (err) {
       const errorMessage =
@@ -60,7 +60,7 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.updateProduct(id, updates);
 
-      if (response.success && response.data) {
+      if (response.data) {
         const updatedProduct = response.data;
         setProductsState(prev =>
           prev.map(product => (product._id === id ? updatedProduct : product)),
@@ -70,7 +70,7 @@ export function useProducts() {
 
       return {
         success: false,
-        error: response.error || response.message || 'Failed to update product',
+        error: response.message || 'Failed to update product',
       };
     } catch (err) {
       const errorMessage =
@@ -86,15 +86,12 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.deleteProduct(id);
 
-      if (response.success) {
+      if (response.message) {
         setProductsState(prev => prev.filter(product => product._id !== id));
         return { success: true };
       }
 
-      return {
-        success: false,
-        error: response.error || response.message || 'Failed to delete product',
-      };
+      return { success: false, error: 'Failed to delete product' };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete product';
