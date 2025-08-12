@@ -11,6 +11,7 @@ import {
   getLoggedInUserId,
   setLoggedInUserId,
   getUsers,
+  setUsers,
   getUserById,
   type User,
 } from "@/lib/local-storage-utils";
@@ -49,16 +50,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    const users = getUsers();
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
-    if (foundUser) {
-      setLoggedInUserId(foundUser.id);
-      setUser(foundUser);
-      return true;
+    try {
+      const users = getUsers();
+      console.log("Available users:", users.length);
+
+      const foundUser = users.find(
+        (u) => u.email === email && u.password === password
+      );
+
+      if (foundUser) {
+        console.log("User found:", foundUser.name, foundUser.role);
+        setLoggedInUserId(foundUser.id);
+        setUser(foundUser);
+        return true;
+      } else {
+        console.log("User not found or password incorrect");
+        console.log("Attempted email:", email);
+        console.log(
+          "Available emails:",
+          users.map((u) => u.email)
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
@@ -68,29 +85,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = (name: string, email: string, password: string): boolean => {
-    const users = getUsers();
-    const existingUser = users.find((u) => u.email === email);
-    if (existingUser) {
-      return false; // User with this email already exists
-    }
+    try {
+      const users = getUsers();
+      const existingUser = users.find((u) => u.email === email);
+      if (existingUser) {
+        return false; // User with this email already exists
+      }
 
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name,
-      email,
-      password,
-      role: "buyer", // Default role
-      isVerifiedSeller: false,
-    };
-    users.push(newUser);
-    localStorage.setItem(
-      "harvestlink_data",
-      JSON.stringify({
-        ...JSON.parse(localStorage.getItem("harvestlink_data") || "{}"),
-        users,
-      })
-    );
-    return true;
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        name,
+        email,
+        password,
+        role: "buyer", // Default role
+        isVerifiedSeller: false,
+      };
+
+      users.push(newUser);
+      setUsers(users);
+
+      return true;
+    } catch (error) {
+      console.error("Registration error:", error);
+      return false;
+    }
   };
 
   const isAuthenticated = !!user;

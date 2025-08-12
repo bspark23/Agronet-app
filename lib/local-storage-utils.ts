@@ -279,11 +279,41 @@ const initialData: LocalStorageData = {
   adminNotification: false,
 }
 
+// Migration function to move data from old key to new key
+const migrateOldData = (): void => {
+  if (typeof window === "undefined") return
+  
+  const oldData = localStorage.getItem("agronet_data")
+  const newData = localStorage.getItem(LOCAL_STORAGE_KEY)
+  
+  // If we have old data but no new data, migrate it
+  if (oldData && !newData) {
+    try {
+      const parsedOldData = JSON.parse(oldData)
+      // Ensure the data has the correct structure
+      const migratedData = {
+        ...initialData,
+        ...parsedOldData,
+        // Ensure logistics companies exist
+        logisticsCompanies: parsedOldData.logisticsCompanies || initialData.logisticsCompanies
+      }
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(migratedData))
+      console.log("Successfully migrated data from agronet_data to harvestlink_data")
+    } catch (error) {
+      console.error("Error migrating old data:", error)
+    }
+  }
+}
+
 // Function to get data from localStorage
 export const getLocalStorageData = (): LocalStorageData => {
   if (typeof window === "undefined") {
     return initialData // Return initial data on server
   }
+  
+  // Run migration first
+  migrateOldData()
+  
   const data = localStorage.getItem(LOCAL_STORAGE_KEY)
   if (data) {
     return JSON.parse(data) as LocalStorageData

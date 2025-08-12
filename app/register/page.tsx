@@ -1,43 +1,43 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const { register } = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { register } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const success = register(name, email, password)
+    e.preventDefault();
+    const success = register(name, email, password);
     if (success) {
       toast({
         title: "Registration Successful!",
         description: "You can now log in with your new account.",
         variant: "success",
-      })
-      router.push("/login")
+      });
+      router.push("/login");
     } else {
       toast({
         title: "Registration Failed",
         description: "User with this email already exists.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-agronetGreen-50 p-4">
@@ -47,7 +47,9 @@ export default function RegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg"
       >
-        <h1 className="mb-6 text-center text-3xl font-bold text-agronetGreen">Register for AgroNet</h1>
+        <h1 className="mb-6 text-center text-3xl font-bold text-agronetGreen">
+          Register for HarvestLink
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name">Full Name</Label>
@@ -82,17 +84,23 @@ export default function RegisterPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full bg-agronetOrange hover:bg-agronetOrange/90 text-white">
+          <Button
+            type="submit"
+            className="w-full bg-agronetOrange hover:bg-agronetOrange/90 text-white"
+          >
             Register
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-agronetGreen hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-agronetGreen hover:underline"
+          >
             Login
           </Link>
         </p>
       </motion.div>
     </div>
-  )
+  );
 }
