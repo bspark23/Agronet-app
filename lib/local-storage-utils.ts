@@ -1,4 +1,4 @@
-import type { LocalStorageData, User, Product, SellerApplication, Chat, WishlistItem } from "./types"
+import type { LocalStorageData, User, Product, SellerApplication, Chat, WishlistItem, OrderForm, Order, LogisticsCompany } from "./types"
 
 const LOCAL_STORAGE_KEY = "agronet_data"
 
@@ -240,6 +240,38 @@ const initialData: LocalStorageData = {
   sellerApplications: [],
   chats: [],
   wishlist: [],
+  orderForms: [],
+  orders: [],
+  logisticsCompanies: [
+    {
+      id: "logistics-1",
+      name: "FastTrack Delivery",
+      price: 15.99,
+      deliveryTime: "1-2 business days",
+      description: "Express delivery service for urgent orders"
+    },
+    {
+      id: "logistics-2", 
+      name: "EcoShip Green",
+      price: 8.99,
+      deliveryTime: "3-5 business days",
+      description: "Environmentally friendly shipping with carbon offset"
+    },
+    {
+      id: "logistics-3",
+      name: "Standard Courier",
+      price: 5.99,
+      deliveryTime: "5-7 business days", 
+      description: "Reliable standard delivery service"
+    },
+    {
+      id: "logistics-4",
+      name: "Premium Express",
+      price: 24.99,
+      deliveryTime: "Same day delivery",
+      description: "Same day delivery for orders placed before 2 PM"
+    }
+  ],
   loggedInUserId: null,
   adminNotification: false,
 }
@@ -319,6 +351,14 @@ export const setAdminNotification = (status: boolean): void => {
 export const generateId = (): string =>
   Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
+// Logistics companies functions
+export const getLogisticsCompanies = (): LogisticsCompany[] => getLocalStorageData().logisticsCompanies || []
+export const setLogisticsCompanies = (companies: LogisticsCompany[]): void => {
+  const data = getLocalStorageData()
+  data.logisticsCompanies = companies
+  setLocalStorageData(data)
+}
+
 // Function to get current user
 export const getCurrentUser = (): User | null => {
   const userId = getLoggedInUserId()
@@ -345,4 +385,20 @@ export const getSellerById = (id: string): User | undefined => {
 // Function to get verified sellers
 export const getVerifiedSellers = (): User[] => {
   return getUsers().filter((user) => user.role === "seller" && user.isVerifiedSeller)
+}
+
+// Order Forms functions
+export const getOrderForms = (): OrderForm[] => getLocalStorageData().orderForms || []
+export const setOrderForms = (orderForms: OrderForm[]): void => {
+  const data = getLocalStorageData()
+  data.orderForms = orderForms
+  setLocalStorageData(data)
+}
+
+// Orders functions
+export const getOrders = (): Order[] => getLocalStorageData().orders || []
+export const setOrders = (orders: Order[]): void => {
+  const data = getLocalStorageData()
+  data.orders = orders
+  setLocalStorageData(data)
 }

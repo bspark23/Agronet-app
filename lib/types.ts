@@ -50,12 +50,53 @@ export interface WishlistItem {
   productId: string
 }
 
+export interface OrderForm {
+  id: string
+  productId: string
+  productName: string
+  productPrice: number
+  productImage: string
+  productDescription: string
+  quantity: number
+  totalPrice: number
+  sellerId: string
+  buyerId: string
+  status: "pending" | "accepted" | "rejected"
+  createdAt: number
+}
+
+export interface LogisticsCompany {
+  id: string
+  name: string
+  price: number
+  deliveryTime: string
+  description: string
+}
+
+export interface Order {
+  id: string
+  orderFormId: string
+  buyerId: string
+  sellerId: string
+  productId: string
+  quantity: number
+  totalPrice: number
+  paymentStatus: "pending" | "completed" | "failed"
+  logisticsCompanyId?: string
+  status: "pending" | "paid" | "shipped" | "delivered"
+  createdAt: number
+  paidAt?: number
+}
+
 export interface LocalStorageData {
   users: User[]
   products: Product[]
   sellerApplications: SellerApplication[]
   chats: Chat[]
   wishlist: WishlistItem[]
+  orderForms: OrderForm[]
+  orders: Order[]
+  logisticsCompanies: LogisticsCompany[]
   loggedInUserId: string | null
   adminNotification: boolean // Flag for new seller applications
 }
