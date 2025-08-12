@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { useFarmerApplicationsApi } from '@/hooks/use-farmer-applications-api';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { Button } from "@/components/ui/button"
+import { farmerApplicationsApi } from '@/lib/api';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -18,24 +18,22 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 
 export default function ApplySellerPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const { createApplication, loading: apiLoading } = useFarmerApplicationsApi();
 
   const [formData, setFormData] = useState({
-    businessName: '',
-    businessAddress: '',
-    businessPhone: '',
-    businessEmail: '',
-    businessDescription: '',
-    certifications: '',
+    farmName: '',
+    farmLocation: '',
+    farmSize: '',
+    cropsGrown: '',
     experience: '',
-    products: '',
+    contactPhone: '',
+    description: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -68,25 +66,29 @@ export default function ApplySellerPage() {
 
     try {
       const applicationData = {
-        businessName: formData.businessName,
-        businessAddress: formData.businessAddress,
-        businessPhone: formData.businessPhone,
-        businessEmail: formData.businessEmail,
-        businessDescription: formData.businessDescription,
-        certifications: formData.certifications,
-        experience: formData.experience,
-        products: formData.products,
+        userId: user._id,
+        farmName: formData.farmName,
+        farmLocation: formData.farmLocation,
+        farmSize: formData.farmSize,
+        cropsGrown: formData.cropsGrown.split(',').map(crop => crop.trim()),
+        experience: parseInt(formData.experience),
+        contactPhone: formData.contactPhone,
+        description: formData.description,
       };
 
-      const result = await createApplication(applicationData);
+      const result = await farmerApplicationsApi.createApplication(
+        applicationData,
+      );
 
-      if (result) {
+      if (result.success) {
         setSubmitted(true);
         toast({
           title: 'Application Submitted!',
           description:
             "Your farmer application has been submitted successfully. We'll review it and get back to you soon.",
         });
+      } else {
+        throw new Error(result.error || 'Failed to submit application');
       }
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -172,112 +174,102 @@ export default function ApplySellerPage() {
               <form onSubmit={handleSubmit} className='space-y-6'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='businessName'>Business Name *</Label>
+                    <Label htmlFor='farmName'>Farm Name *</Label>
                     <Input
-                      id='businessName'
-                      name='businessName'
-                      value={formData.businessName}
+                      id='farmName'
+                      name='farmName'
+                      value={formData.farmName}
                       onChange={handleInputChange}
-                      placeholder='Enter your business name'
+                      placeholder='Enter your farm name'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='businessPhone'>Business Phone *</Label>
+                    <Label htmlFor='farmLocation'>Farm Location *</Label>
                     <Input
-                      id='businessPhone'
-                      name='businessPhone'
-                      type='tel'
-                      value={formData.businessPhone}
+                      id='farmLocation'
+                      name='farmLocation'
+                      value={formData.farmLocation}
                       onChange={handleInputChange}
-                      placeholder='e.g., +1-555-123-4567'
+                      placeholder='City, State/Province'
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='farmSize'>Farm Size (acres) *</Label>
+                    <Input
+                      id='farmSize'
+                      name='farmSize'
+                      value={formData.farmSize}
+                      onChange={handleInputChange}
+                      placeholder='e.g., 50 acres'
+                      required
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='experience'>Years of Experience *</Label>
+                    <Input
+                      id='experience'
+                      name='experience'
+                      type='number'
+                      value={formData.experience}
+                      onChange={handleInputChange}
+                      placeholder='e.g., 5'
+                      min='0'
                       required
                     />
                   </div>
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='businessAddress'>Business Address *</Label>
+                  <Label htmlFor='cropsGrown'>Crops Grown *</Label>
                   <Input
-                    id='businessAddress'
-                    name='businessAddress'
-                    value={formData.businessAddress}
+                    id='cropsGrown'
+                    name='cropsGrown'
+                    value={formData.cropsGrown}
                     onChange={handleInputChange}
-                    placeholder='Complete business address'
+                    placeholder='e.g., Tomatoes, Corn, Lettuce (comma separated)'
+                    required
+                  />
+                  <p className='text-sm text-gray-500'>
+                    List the main crops you grow, separated by commas
+                  </p>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='contactPhone'>Contact Phone *</Label>
+                  <Input
+                    id='contactPhone'
+                    name='contactPhone'
+                    type='tel'
+                    value={formData.contactPhone}
+                    onChange={handleInputChange}
+                    placeholder='e.g., +1-555-123-4567'
                     required
                   />
                 </div>
 
                 <div className='space-y-2'>
-                  <Label htmlFor='businessEmail'>Business Email *</Label>
-                  <Input
-                    id='businessEmail'
-                    name='businessEmail'
-                    type='email'
-                    value={formData.businessEmail}
-                    onChange={handleInputChange}
-                    placeholder='business@example.com'
-                    required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='businessDescription'>
-                    Business Description *
-                  </Label>
+                  <Label htmlFor='description'>Farm Description *</Label>
                   <Textarea
-                    id='businessDescription'
-                    name='businessDescription'
-                    value={formData.businessDescription}
+                    id='description'
+                    name='description'
+                    value={formData.description}
                     onChange={handleInputChange}
-                    placeholder='Tell us about your farming business, practices, and operations...'
+                    placeholder='Tell us about your farming practices, certifications, and what makes your farm special...'
                     rows={4}
                     required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='products'>Products/Crops *</Label>
-                  <Textarea
-                    id='products'
-                    name='products'
-                    value={formData.products}
-                    onChange={handleInputChange}
-                    placeholder='List the products/crops you grow and sell...'
-                    rows={3}
-                    required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='experience'>Experience</Label>
-                  <Textarea
-                    id='experience'
-                    name='experience'
-                    value={formData.experience}
-                    onChange={handleInputChange}
-                    placeholder='Describe your farming experience and background...'
-                    rows={3}
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='certifications'>Certifications</Label>
-                  <Textarea
-                    id='certifications'
-                    name='certifications'
-                    value={formData.certifications}
-                    onChange={handleInputChange}
-                    placeholder='List any relevant certifications (organic, fair trade, etc.)...'
-                    rows={2}
                   />
                 </div>
 
                 <Button
                   type='submit'
                   className='w-full bg-agronetGreen hover:bg-green-600'
-                  disabled={loading || apiLoading}>
-                  {loading || apiLoading ? (
+                  disabled={loading}>
+                  {loading ? (
                     <>
                       <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                       Submitting Application...

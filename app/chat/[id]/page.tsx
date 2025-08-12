@@ -20,7 +20,7 @@ export default function ChatPage() {
   const params = useParams()
   const threadId = params.id as string;
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const {
     currentThread,
@@ -64,10 +64,21 @@ export default function ChatPage() {
     if (currentThread && user) {
       // Determine the other participant
       const other =
-        currentThread.buyerId?._id === user.id
+        currentThread.buyerId === user._id
           ? currentThread.farmerId
           : currentThread.buyerId;
-      setOtherParticipant(other as User);
+      // Since buyerId and farmerId are strings, create a placeholder user object
+      setOtherParticipant({
+        _id: other,
+        firstname: 'User',
+        lastname: '',
+        email: '',
+        emailVerified: false,
+        accountStatus: 'active',
+        role: currentThread.buyerId === user._id ? 'farmer' : 'buyer',
+        createdAt: '',
+        updatedAt: '',
+      } as User);
     }
   }, [currentThread, user]);
 
@@ -92,7 +103,7 @@ export default function ChatPage() {
 
     const messageData = {
       threadId: currentThread._id,
-      receiverId: otherParticipant._id || otherParticipant.id,
+      receiverId: otherParticipant._id,
       content: newMessage.trim(),
     };
 
@@ -164,18 +175,20 @@ export default function ChatPage() {
           <Avatar className='h-10 w-10'>
             <AvatarImage
               src='/placeholder.svg?height=40&width=40'
-              alt={otherParticipant.fullName}
+              alt={`${otherParticipant?.firstname} ${otherParticipant?.lastname}`}
             />
             <AvatarFallback>
-              {otherParticipant.fullName?.charAt(0).toUpperCase()}
+              {otherParticipant?.firstname?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           <div>
             <h1 className='text-2xl font-bold text-agronetGreen'>
-              {otherParticipant.fullName}
+              {`${otherParticipant?.firstname || 'User'} ${
+                otherParticipant?.lastname || ''
+              }`}
             </h1>
             <p className='text-sm text-gray-600'>
-              {otherParticipant.role === 'farmer' ? 'Farmer' : 'Buyer'}
+              {otherParticipant?.role === 'farmer' ? 'Farmer' : 'Buyer'}
             </p>
           </div>
         </motion.div>
@@ -190,20 +203,20 @@ export default function ChatPage() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className={`flex ${
-                  message.senderId._id === user.id
+                  message.senderId === user._id
                     ? 'justify-end'
                     : 'justify-start'
                 }`}>
                 <div
                   className={`max-w-[70%] p-3 rounded-lg shadow-md ${
-                    message.senderId._id === user.id
+                    message.senderId === user._id
                       ? 'bg-agronetGreen text-white rounded-br-none'
                       : 'bg-white text-gray-800 rounded-bl-none'
                   }`}>
                   <p className='text-sm'>{message.content}</p>
                   <span
                     className={`block text-xs mt-1 ${
-                      message.senderId._id === user.id
+                      message.senderId === user._id
                         ? 'text-green-100'
                         : 'text-gray-500'
                     } text-right`}>

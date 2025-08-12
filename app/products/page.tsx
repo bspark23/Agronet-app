@@ -12,13 +12,13 @@ import { motion } from "framer-motion"
 import { Loader2 } from "lucide-react"
 
 export default function ProductsPage() {
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [priceFilter, setPriceFilter] = useState("all")
-  const [sellerStatusFilter, setSellerStatusFilter] = useState("all")
-  const [loading, setLoading] = useState(true)
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [sellerStatusFilter, setSellerStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function ProductsPage() {
     };
 
     fetchProducts();
-  }, [])
+  }, []);
 
   useEffect(() => {
     let currentProducts = [...allProducts];
@@ -53,12 +53,12 @@ export default function ProductsPage() {
       );
     }
 
-    // Filter by category
-    if (categoryFilter !== 'all') {
-      currentProducts = currentProducts.filter(
-        product => product.category === categoryFilter,
-      );
-    }
+    // Filter by category - Disabled since Product doesn't have category field
+    // if (categoryFilter !== 'all') {
+    //   currentProducts = currentProducts.filter(
+    //     product => product.category === categoryFilter,
+    //   );
+    // }
 
     // Filter by price
     if (priceFilter !== 'all') {
@@ -82,16 +82,23 @@ export default function ProductsPage() {
     // }
 
     setFilteredProducts(currentProducts);
-  }, [allProducts, searchTerm, categoryFilter, priceFilter, sellerStatusFilter])
+  }, [
+    allProducts,
+    searchTerm,
+    categoryFilter,
+    priceFilter,
+    sellerStatusFilter,
+  ]);
 
-  const allCategories = Array.from(new Set(allProducts.map((p) => p.category)))
+  // Categories disabled since Product doesn't have category field
+  const allCategories: string[] = [];
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
+      <div className='flex min-h-screen items-center justify-center'>
+        <Loader2 className='h-8 w-8 animate-spin text-agronetGreen' />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -112,15 +119,14 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className='flex flex-col min-h-screen'>
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 md:px-6">
+      <main className='flex-1 container mx-auto px-4 py-8 md:px-6'>
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-3xl font-bold text-agronetGreen mb-6 text-center"
-        >
+          className='text-3xl font-bold text-agronetGreen mb-6 text-center'>
           Our Products
         </motion.h1>
 
@@ -129,21 +135,20 @@ export default function ProductsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4"
-        >
+          className='mb-8 grid grid-cols-1 md:grid-cols-4 gap-4'>
           <Input
-            placeholder="Search products..."
+            placeholder='Search products...'
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="col-span-full md:col-span-1"
+            onChange={e => setSearchTerm(e.target.value)}
+            className='col-span-full md:col-span-1'
           />
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Filter by Category" />
+            <SelectTrigger className='w-full'>
+              <SelectValue placeholder='Filter by Category' />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {allCategories.map((category) => (
+              <SelectItem value='all'>All Categories</SelectItem>
+              {allCategories.map(category => (
                 <SelectItem key={category} value={category}>
                   {category}
                 </SelectItem>
@@ -151,23 +156,25 @@ export default function ProductsPage() {
             </SelectContent>
           </Select>
           <Select value={priceFilter} onValueChange={setPriceFilter}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Sort by Price" />
+            <SelectTrigger className='w-full'>
+              <SelectValue placeholder='Sort by Price' />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">No Price Sort</SelectItem>
-              <SelectItem value="low-to-high">Price: Low to High</SelectItem>
-              <SelectItem value="high-to-low">Price: High to Low</SelectItem>
+              <SelectItem value='all'>No Price Sort</SelectItem>
+              <SelectItem value='low-to-high'>Price: Low to High</SelectItem>
+              <SelectItem value='high-to-low'>Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={sellerStatusFilter} onValueChange={setSellerStatusFilter}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Filter by Seller Status" />
+          <Select
+            value={sellerStatusFilter}
+            onValueChange={setSellerStatusFilter}>
+            <SelectTrigger className='w-full'>
+              <SelectValue placeholder='Filter by Seller Status' />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Sellers</SelectItem>
-              <SelectItem value="verified">Verified Sellers</SelectItem>
-              <SelectItem value="unverified">Unverified Sellers</SelectItem>
+              <SelectItem value='all'>All Sellers</SelectItem>
+              <SelectItem value='verified'>Verified Sellers</SelectItem>
+              <SelectItem value='unverified'>Unverified Sellers</SelectItem>
             </SelectContent>
           </Select>
         </motion.div>
@@ -178,19 +185,17 @@ export default function ProductsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="text-center text-gray-600 text-lg mt-10"
-          >
+            className='text-center text-gray-600 text-lg mt-10'>
             No products found matching your criteria.
           </motion.p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
             {filteredProducts.map((product, index) => (
               <motion.div
-                key={product.id}
+                key={product._id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
-              >
+                transition={{ duration: 0.5, delay: index * 0.05 }}>
                 <ProductCard product={product} />
               </motion.div>
             ))}
@@ -199,5 +204,5 @@ export default function ProductsPage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }

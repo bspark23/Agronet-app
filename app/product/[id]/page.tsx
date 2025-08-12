@@ -8,7 +8,13 @@ import { useProducts } from '@/hooks/use-products-api';
 import { useMessages } from '@/hooks/use-messages-api';
 import { usersApi } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
-import { getWishlist, setWishlist } from '@/lib/local-storage-utils';
+import {
+  getWishlist,
+  setWishlist,
+  isInWishlist as checkWishlist,
+  addToWishlist,
+  removeFromWishlist,
+} from '@/lib/local-storage-utils';
 import type { Product, User } from "@/lib/types"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -51,14 +57,15 @@ export default function ProductPage() {
         setProduct(productData);
 
         // Get seller details from API
-        if (productData.userId) {
-          const sellerData = await usersApi.getUser(productData.userId);
+        if (productData.farmerId) {
+          const sellerData = await usersApi.getUser(productData.farmerId);
           setSeller(sellerData);
         }
 
         // Check if product is in wishlist
-        const wishlist = getWishlist();
-        setIsInWishlist(wishlist.includes(id as string));
+        if (user) {
+          setIsInWishlist(checkWishlist(user._id, id as string));
+        }
       } catch (error) {
         console.error('Error loading product data:', error);
       }
@@ -78,21 +85,19 @@ export default function ProductPage() {
       return;
     }
 
-    let wishlist = getWishlist();
     if (isInWishlist) {
-      wishlist = wishlist.filter(productId => productId !== id);
+      removeFromWishlist(user._id, id as string);
       toast({
         title: 'Removed from Wishlist',
         description: `${product?.name} has been removed from your wishlist.`,
       });
     } else {
-      wishlist.push(id as string);
+      addToWishlist(user._id, id as string);
       toast({
         title: 'Added to Wishlist!',
         description: `${product?.name} has been added to your wishlist.`,
       });
     }
-    setWishlist(wishlist);
     setIsInWishlist(!isInWishlist);
   };
 
@@ -107,7 +112,7 @@ export default function ProductPage() {
       return;
     }
 
-    if (user.id === seller?.id) {
+    if (user._id === seller?._id) {
       toast({
         title: 'Cannot Contact Yourself',
         description: 'You cannot initiate a chat with your own product.',
@@ -127,9 +132,8 @@ export default function ProductPage() {
 
     try {
       // Determine who is buyer and who is farmer
-      const buyerId = user.role === 'buyer' ? user.id : seller._id || seller.id;
-      const farmerId =
-        user.role === 'farmer' ? user.id : seller._id || seller.id;
+      const buyerId = user.role === 'buyer' ? user._id : seller._id;
+      const farmerId = user.role === 'farmer' ? user._id : seller._id;
 
       // Create or get existing thread
       const thread = await createOrGetThread(buyerId, farmerId);
@@ -139,7 +143,7 @@ export default function ProductPage() {
 
       toast({
         title: 'Chat Started',
-        description: `You can now chat with ${seller.fullName}`,
+        description: `You can now chat with ${seller.firstname} ${seller.lastname}`,
       });
     } catch (error) {
       console.error('Error starting chat:', error);
@@ -189,7 +193,9 @@ export default function ProductPage() {
               {product.name}
             </h1>
             <div className='flex items-center gap-2 text-lg text-gray-700'>
-              <span>Sold by: {seller.fullName}</span>
+              <span>
+                Sold by: {seller.firstname} {seller.lastname}
+              </span>
               {seller.role === 'farmer' && (
                 <Verified className='h-5 w-5 text-agronetGreen' />
               )}
@@ -201,8 +207,7 @@ export default function ProductPage() {
               {product.description}
             </p>
             <p className='text-gray-600'>
-              <span className='font-semibold'>Type:</span>{' '}
-              {product.type || 'General'}
+              <span className='font-semibold'>Type:</span> General
             </p>
             <p className='text-gray-600'>
               <span className='font-semibold'>Available Quantity:</span>{' '}

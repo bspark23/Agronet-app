@@ -36,8 +36,7 @@ export default function PostProductPage() {
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
   const [quantity, setQuantity] = useState("")
-  const [image, setImage] = useState("")
-  const [category, setCategory] = useState("")
+  const [image, setImage] = useState('');
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -64,7 +63,6 @@ export default function PostProductPage() {
             setPrice(product.price.toString());
             setQuantity(product.quantity.toString());
             setImage(product.images[0] || '');
-            setCategory(''); // Categories not yet implemented
             setIsEditing(true);
           } else {
             toast({
@@ -193,98 +191,99 @@ export default function PostProductPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className='flex flex-col min-h-screen'>
       <Navbar />
-      <main className="flex-1 flex items-center justify-center bg-agronetGreen-50 p-4">
+      <main className='flex-1 flex items-center justify-center bg-agronetGreen-50 p-4'>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg"
-        >
-          <h1 className="mb-6 text-center text-3xl font-bold text-agronetGreen">
-            {isEditing ? "Edit Product" : "Post New Product"}
+          className='w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg'>
+          <h1 className='mb-6 text-center text-3xl font-bold text-agronetGreen'>
+            {isEditing ? 'Edit Product' : 'Post New Product'}
           </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <div>
-              <Label htmlFor="name">Product Name</Label>
+              <Label htmlFor='name'>Product Name</Label>
               <Input
-                id="name"
-                type="text"
-                placeholder="e.g., Organic Tomatoes"
+                id='name'
+                type='text'
+                placeholder='e.g., Organic Tomatoes'
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor='description'>Description</Label>
               <Textarea
-                id="description"
-                placeholder="Detailed description of your product..."
+                id='description'
+                placeholder='Detailed description of your product...'
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 required
                 rows={5}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor='price'>Price ($)</Label>
                 <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  placeholder="e.g., 3.99"
+                  id='price'
+                  type='number'
+                  step='0.01'
+                  placeholder='e.g., 3.99'
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onChange={e => setPrice(e.target.value)}
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="quantity">Quantity</Label>
+                <Label htmlFor='quantity'>Quantity</Label>
                 <Input
-                  id="quantity"
-                  type="number"
-                  placeholder="e.g., 100"
+                  id='quantity'
+                  type='number'
+                  placeholder='e.g., 100'
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={e => setQuantity(e.target.value)}
                   required
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor='image'>Product Image</Label>
               <Input
-                id="category"
-                type="text"
-                placeholder="e.g., Vegetables, Fruits, Dairy"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
+                id='image'
+                type='file'
+                accept='image/*'
+                onChange={handleImageUpload}
+                className='mb-2'
               />
-            </div>
-            <div>
-              <Label htmlFor="image">Product Image</Label>
-              <Input id="image" type="file" accept="image/*" onChange={handleImageUpload} className="mb-2" />
               {image && (
-                <div className="relative w-32 h-32 rounded-md overflow-hidden border">
-                  <Image src={image || "/placeholder.svg"} alt="Product Preview" fill style={{ objectFit: "cover" }} />
+                <div className='relative w-32 h-32 rounded-md overflow-hidden border'>
+                  <Image
+                    src={image || '/placeholder.svg'}
+                    alt='Product Preview'
+                    fill
+                    style={{ objectFit: 'cover' }}
+                  />
                 </div>
               )}
-              <p className="text-sm text-gray-500 mt-2">
+              <p className='text-sm text-gray-500 mt-2'>
                 {isEditing
-                  ? "Upload a new image to replace the current one, or leave blank to keep."
-                  : "Upload an image for your product."}
+                  ? 'Upload a new image to replace the current one, or leave blank to keep.'
+                  : 'Upload an image for your product.'}
               </p>
             </div>
-            <Button type="submit" className="w-full bg-agronetOrange hover:bg-agronetOrange/90 text-white">
-              {isEditing ? "Update Product" : "Post Product"}
+            <Button
+              type='submit'
+              className='w-full bg-agronetOrange hover:bg-agronetOrange/90 text-white'>
+              {isEditing ? 'Update Product' : 'Post Product'}
             </Button>
           </form>
         </motion.div>
       </main>
       <Footer />
     </div>
-  )
+  );
 }

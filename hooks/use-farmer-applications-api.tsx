@@ -1,193 +1,116 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { apiClient } from '@/lib/api';
-import { API_CONFIG } from '@/lib/api-config';
+import { useEffect, useState } from 'react';
+import { farmerApplicationsApi } from '@/lib/api';
+import type {
+  FarmerApplication,
+  CreateFarmerApplicationForm,
+} from '@/lib/types';
 
-export interface FarmerApplication {
-  _id: string;
-  userId: string;
-  user?: {
-    _id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
-  businessName: string;
-  businessAddress: string;
-  businessPhone: string;
-  businessEmail: string;
-  businessDescription: string;
-  certifications: string;
-  experience: string;
-  products: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateFarmerApplicationData {
-  businessName: string;
-  businessAddress: string;
-  businessPhone: string;
-  businessEmail: string;
-  businessDescription: string;
-  certifications?: string;
-  experience?: string;
-  products?: string;
-}
-
-export interface UpdateFarmerApplicationStatusData {
-  status: 'approved' | 'rejected';
-}
-
-export const useFarmerApplicationsApi = () => {
-  const [loading, setLoading] = useState(false);
+export function useFarmerApplications() {
+  const [applications, setApplications] = useState<FarmerApplication[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Create a new farmer application
-  const createApplication = useCallback(
-    async (
-      data: CreateFarmerApplicationData,
-    ): Promise<FarmerApplication | null> => {
+  const loadApplications = async () => {
+    try {
       setLoading(true);
       setError(null);
+      const data = await farmerApplicationsApi.getApplications();
+      setApplications(data);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load applications';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      try {
-        const response = await apiClient.post<FarmerApplication>(
-          API_CONFIG.FARMER_APPLICATIONS.CREATE,
-          data,
-        );
-        return response.data;
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || 'Failed to create farmer application';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // Get all farmer applications (admin only)
-  const getApplications = useCallback(
-    async (params?: {
-      page?: number;
-      limit?: number;
-      status?: string;
-    }): Promise<{
-      applications: FarmerApplication[];
-      total: number;
-      page: number;
-      limit: number;
-    } | null> => {
-      setLoading(true);
+  const getApplication = async (id: string) => {
+    try {
       setError(null);
+      return await farmerApplicationsApi.getApplication(id);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to get application';
+      setError(message);
+      throw err;
+    }
+  };
 
-      try {
-        const queryParams = new URLSearchParams();
-        if (params?.page) queryParams.append('page', params.page.toString());
-        if (params?.limit) queryParams.append('limit', params.limit.toString());
-        if (params?.status) queryParams.append('status', params.status);
-
-        const url = `${API_CONFIG.FARMER_APPLICATIONS.LIST}${
-          queryParams.toString() ? `?${queryParams.toString()}` : ''
-        }`;
-        const response = await apiClient.get(url);
-        return response.data;
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || 'Failed to fetch farmer applications';
-        setError(errorMessage);
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // Get a specific farmer application by ID
-  const getApplicationById = useCallback(
-    async (id: string): Promise<FarmerApplication | null> => {
-      setLoading(true);
+  const createApplication = async (payload: CreateFarmerApplicationForm) => {
+    try {
       setError(null);
-
-      try {
-        const response = await apiClient.get<FarmerApplication>(
-          API_CONFIG.FARMER_APPLICATIONS.BY_ID(id),
-        );
-        return response.data;
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || 'Failed to fetch farmer application';
-        setError(errorMessage);
-        return null;
-      } finally {
-        setLoading(false);
+      const res = await farmerApplicationsApi.createApplication(payload);
+      // Backend now returns { success: boolean, data?: T, message?: string, error?: string }
+      if (res.success && res.data) {
+        setApplications(prev => [...prev, res.data!]);
+        return { success: true, application: res.data } as const;
       }
-    },
-    [],
-  );
+      return {
+        success: false,
+        error: res.error || 'Failed to create application',
+      } as const;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create application';
+      setError(message);
+      return { success: false, error: message } as const;
+    }
+  };
 
-  // Update farmer application status (admin only)
-  const updateApplicationStatus = useCallback(
-    async (
-      id: string,
-      data: UpdateFarmerApplicationStatusData,
-    ): Promise<FarmerApplication | null> => {
-      setLoading(true);
+  const updateApplication = async (
+    id: string,
+    updates: Partial<CreateFarmerApplicationForm>,
+  ) => {
+    try {
       setError(null);
-
-      try {
-        const response = await apiClient.patch<FarmerApplication>(
-          API_CONFIG.FARMER_APPLICATIONS.UPDATE_STATUS(id),
-          data,
-        );
-        return response.data;
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || 'Failed to update application status';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      } finally {
-        setLoading(false);
+      const res = await farmerApplicationsApi.updateApplication(id, updates);
+      // Backend now returns { success: boolean, data?: T, message?: string, error?: string }
+      if (res.success && res.data) {
+        setApplications(prev => prev.map(a => (a._id === id ? res.data! : a)));
+        return { success: true, application: res.data } as const;
       }
-    },
-    [],
-  );
+      return {
+        success: false,
+        error: res.error || 'Failed to update application',
+      } as const;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update application';
+      setError(message);
+      return { success: false, error: message } as const;
+    }
+  };
 
-  // Delete a farmer application (admin only)
-  const deleteApplication = useCallback(
-    async (id: string): Promise<boolean> => {
-      setLoading(true);
+  const deleteApplication = async (id: string) => {
+    try {
       setError(null);
+      await farmerApplicationsApi.deleteApplication(id);
+      // If no error thrown, assume success
+      setApplications(prev => prev.filter(a => a._id !== id));
+      return { success: true } as const;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete application';
+      setError(message);
+      return { success: false, error: message } as const;
+    }
+  };
 
-      try {
-        await apiClient.delete(API_CONFIG.FARMER_APPLICATIONS.DELETE(id));
-        return true;
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || 'Failed to delete farmer application';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  useEffect(() => {
+    loadApplications();
+  }, []);
 
   return {
+    applications,
     loading,
     error,
+    loadApplications,
+    getApplication,
     createApplication,
-    getApplications,
-    getApplicationById,
-    updateApplicationStatus,
+    updateApplication,
     deleteApplication,
   };
-};
+}

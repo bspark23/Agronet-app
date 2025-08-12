@@ -45,34 +45,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = () => {
-      console.log('🔐 Initializing auth...');
+    let active = true;
+    const bootstrap = async () => {
       try {
-        const userData = localStorage.getItem('agronet_user');
-        console.log('🔍 Found user data in localStorage:', !!userData);
-
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          console.log('✅ Setting user:', parsedUser.email);
-          setUser(parsedUser);
-        } else {
-          console.log('❌ No user data found');
-        }
-      } catch (error) {
-        console.error('❌ Error parsing user data:', error);
-        localStorage.removeItem('agronet_user');
+        const token = localStorage.getItem('agronet_token');
+        if (!token) return;
+        const profile = await authApi.getProfile();
+        if (active) setUser(profile as unknown as User);
+      } catch (err) {
+        // Token invalid/expired
         localStorage.removeItem('agronet_token');
+        if (active) setUser(null);
+      } finally {
+        if (active) setIsLoading(false);
       }
-
-      // Always set loading to false after checking localStorage
-      console.log('🏁 Auth initialization complete');
-      setIsLoading(false);
     };
-
-    // Add a small delay to ensure localStorage is accessible
-    const timer = setTimeout(initializeAuth, 50);
-
-    return () => clearTimeout(timer);
+    bootstrap();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -81,10 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authApi.login({ email, password });
 
       if (response?.user && response?.token) {
-        console.log('✅ Login successful, storing user data');
-        setUser(response.user);
-        localStorage.setItem('agronet_user', JSON.stringify(response.user));
+        console.log('✅ Login successful, storing token');
         localStorage.setItem('agronet_token', response.token);
+        // Fetch fresh profile from server to avoid trusting local copy
+        try {
+          const profile = await authApi.getProfile();
+          setUser(profile as unknown as User);
+        } catch {
+          // if profile fails, still consider login failed
+          localStorage.removeItem('agronet_token');
+          return false;
+        }
         return true;
       }
 
@@ -113,9 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response?.user && response?.token) {
-        setUser(response.user);
-        localStorage.setItem('agronet_user', JSON.stringify(response.user));
         localStorage.setItem('agronet_token', response.token);
+        try {
+          const profile = await authApi.getProfile();
+          setUser(profile as unknown as User);
+        } catch {
+          localStorage.removeItem('agronet_token');
+          return { success: false, error: 'Failed to load profile' };
+        }
         return { success: true };
       }
 
@@ -132,7 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('agronet_user');
     localStorage.removeItem('agronet_token');
   };
 

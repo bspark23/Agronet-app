@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -23,22 +23,19 @@ export default function LoginPage() {
     e.preventDefault();
     const success = await login(email, password);
     if (success) {
-      const userData = localStorage.getItem('agronet_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        const userName = user.firstname || 'user';
-        toast({
-          title: 'Login Successful!',
-          description: `Welcome back, ${userName}!`,
-          variant: 'success',
-        });
-        if (user.role === 'admin') {
-          router.push('/dashboard/admin');
-        } else if (user.role === 'farmer') {
-          router.push('/dashboard/seller');
-        } else {
-          router.push('/dashboard/buyer');
-        }
+      const name = user?.firstname || 'user';
+      const role = user?.role;
+      toast({
+        title: 'Login Successful!',
+        description: `Welcome back, ${name}!`,
+        variant: 'success',
+      });
+      if (role === 'admin') {
+        router.push('/dashboard/admin');
+      } else if (role === 'farmer') {
+        router.push('/dashboard/seller');
+      } else {
+        router.push('/dashboard/buyer');
       }
     } else {
       toast({

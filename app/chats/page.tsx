@@ -1,9 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-i  }
-
-  if (error) {} from "next/navigation"
+import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/use-auth"
 import { useMessages } from "@/hooks/use-messages-api"
 import { Navbar } from "@/components/navbar"
@@ -15,7 +13,7 @@ import { MessageSquare, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function ChatsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter()
   const { 
     threads, 
@@ -34,13 +32,15 @@ export default function ChatsPage() {
     }
   }, [isAuthenticated, user, authLoading, router, loadThreads])
 
-  const getOtherParticipant = (thread: MessageThread): User | undefined => {
-    // Get the other participant (not the current user)
-    const otherParticipant = thread.buyerId?._id === user?.id 
-      ? thread.farmerId 
-      : thread.buyerId
-    return otherParticipant as User
-  }
+  const getOtherParticipant = (
+    thread: MessageThread,
+  ): { role: 'buyer' | 'farmer'; id: string } => {
+    // Determine the other participant's role and id
+    const isBuyerCurrent = thread.buyerId === user?._id;
+    return isBuyerCurrent
+      ? { role: 'farmer', id: thread.farmerId }
+      : { role: 'buyer', id: thread.buyerId };
+  };
 
   const formatLastMessageTime = (date: Date | string): string => {
     const messageDate = new Date(date)
@@ -135,40 +135,44 @@ export default function ChatsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {threads.map((thread, index) => {
-              const otherParticipant = getOtherParticipant(thread)
-              if (!otherParticipant) return null
+              const other = getOtherParticipant(thread);
 
               return (
                 <motion.div
                   key={thread._id}
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                >
+                  transition={{ duration: 0.5, delay: index * 0.05 }}>
                   <Card
-                    className="cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                    onClick={() => router.push(`/chat/${thread._id}`)}
-                  >
-                    <CardContent className="flex items-center p-4 gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src="/placeholder.svg?height=48&width=48" alt={otherParticipant.fullName} />
-                        <AvatarFallback>{otherParticipant.fullName?.charAt(0).toUpperCase()}</AvatarFallback>
+                    className='cursor-pointer hover:shadow-lg transition-shadow duration-300'
+                    onClick={() => router.push(`/chat/${thread._id}`)}>
+                    <CardContent className='flex items-center p-4 gap-4'>
+                      <Avatar className='h-12 w-12'>
+                        <AvatarImage
+                          src='/placeholder.svg?height=48&width=48'
+                          alt={other.role}
+                        />
+                        <AvatarFallback>
+                          {other.role.charAt(0).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1 overflow-hidden">
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-semibold text-lg truncate">{otherParticipant.fullName}</h3>
-                          <span className="text-xs text-gray-500">
+                      <div className='flex-1 overflow-hidden'>
+                        <div className='flex justify-between items-center'>
+                          <h3 className='font-semibold text-lg truncate'>
+                            {other.role === 'farmer' ? 'Farmer' : 'Buyer'}
+                          </h3>
+                          <span className='text-xs text-gray-500'>
                             {formatLastMessageTime(thread.lastMessageAt)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 truncate">
-                          {otherParticipant.role === 'farmer' ? 'Farmer' : 'Buyer'} • Click to chat
+                        <p className='text-sm text-gray-600 truncate'>
+                          Click to chat
                         </p>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
-              )
+              );
             })}
           </div>
         )}

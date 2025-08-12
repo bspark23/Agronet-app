@@ -88,22 +88,38 @@ export interface MessageThread {
 // Farmer application types
 export interface FarmerApplication {
   _id: string;
-  userId: string;
-  idCardUrl: string;
-  proofOfFarmUrl: string;
+  userId: string | User; // Can be populated with User object
+  farmName: string;
+  farmLocation: string;
+  farmSize: string;
+  cropsGrown: string[];
+  experience: number;
+  contactPhone: string;
+  description: string;
   status: FarmerApplicationStatus;
+  idCardUrl?: string;
+  proofOfFarmUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 // API Response types
 export interface ApiResponse<T> {
+  success: boolean;
   data?: T;
   message?: string;
   error?: string;
 }
 
+// Special response type for farmer applications (backend returns different format)
+export interface FarmerApplicationResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
 export interface PaginatedResponse<T> {
+  success: boolean;
   data: T[];
   total: number;
   page: number;
@@ -167,6 +183,13 @@ export interface CreateReviewForm {
 
 export interface CreateFarmerApplicationForm {
   userId: string;
-  idCardUrl: string;
-  proofOfFarmUrl: string;
+  farmName: string;
+  farmLocation: string;
+  farmSize: string;
+  cropsGrown: string[];
+  experience: number;
+  contactPhone: string;
+  description: string;
+  idCardUrl?: string;
+  proofOfFarmUrl?: string;
 }

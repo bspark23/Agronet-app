@@ -19,7 +19,7 @@ export default function VerifiedSellersPage() {
     const loadVerifiedFarmers = async () => {
       try {
         setLoading(true);
-        const allUsers = await usersApi.getUsers();
+        const allUsers = await usersApi.getAllUsers();
         const verifiedFarmers = allUsers.filter(
           user =>
             user.role === 'farmer' &&
@@ -36,14 +36,14 @@ export default function VerifiedSellersPage() {
     };
 
     loadVerifiedFarmers();
-  }, [])
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
+      <div className='flex min-h-screen items-center justify-center'>
+        <Loader2 className='h-8 w-8 animate-spin text-agronetGreen' />
       </div>
-    )
+    );
   }
 
   return (
@@ -99,7 +99,7 @@ export default function VerifiedSellersPage() {
                       {farmer.firstname} {farmer.lastname}{' '}
                       <Verified
                         className='h-6 w-6 text-agronetGreen fill-agronetGreen'
-                        title='Verified Farmer'
+                        aria-label='Verified Farmer'
                       />
                     </CardTitle>
                     <p className='text-sm text-gray-600'>

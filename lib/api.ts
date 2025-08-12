@@ -28,6 +28,7 @@ async function apiRequest<T>(
     const response = await fetch(url, {
       ...options,
       headers: {
+        'Content-Type': 'application/json',
         ...getAuthHeaders(),
         ...options.headers,
       },
@@ -84,12 +85,21 @@ export const usersApi = {
     });
   },
 
-  getUsers: async (limit = 10, offset = 0): Promise<User[]> => {
+  getUsers: async (limit = 100, offset = 0): Promise<User[]> => {
     const params = new URLSearchParams({
       limit: limit.toString(),
       offset: offset.toString(),
     });
     return apiRequest(`${API_CONFIG.ENDPOINTS.USERS.LIST}?${params}`);
+  },
+
+  getAllUsers: async (): Promise<User[]> => {
+    // For cases like verified sellers where we need all users
+    return apiRequest(API_CONFIG.ENDPOINTS.USERS.LIST);
+  },
+
+  getUser: async (id: string): Promise<User> => {
+    return apiRequest(API_CONFIG.ENDPOINTS.USERS.BY_ID(id));
   },
 };
 
@@ -273,11 +283,20 @@ export const messagesApi = {
 // Farmer Applications API
 export const farmerApplicationsApi = {
   getApplications: async (): Promise<FarmerApplication[]> => {
-    return apiRequest(API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.LIST);
+    const response: ApiResponse<FarmerApplication[]> = await apiRequest(
+      API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.LIST,
+    );
+    return response.data || [];
   },
 
   getApplication: async (id: string): Promise<FarmerApplication> => {
-    return apiRequest(API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.BY_ID(id));
+    const response: ApiResponse<FarmerApplication> = await apiRequest(
+      API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.BY_ID(id),
+    );
+    if (!response.data) {
+      throw new Error('Application not found');
+    }
+    return response.data;
   },
 
   createApplication: async (
@@ -303,6 +322,19 @@ export const farmerApplicationsApi = {
     return apiRequest(API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.DELETE(id), {
       method: 'DELETE',
     });
+  },
+
+  updateStatus: async (
+    id: string,
+    status: 'pending' | 'approved' | 'rejected',
+  ): Promise<ApiResponse<FarmerApplication>> => {
+    return apiRequest(
+      API_CONFIG.ENDPOINTS.FARMER_APPLICATIONS.UPDATE_STATUS(id),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      },
+    );
   },
 };
 
@@ -334,33 +366,5 @@ export const geolocationApi = {
       radius: radius.toString(),
     });
     return apiRequest(`${API_CONFIG.ENDPOINTS.GEOLOCATION.NEARBY}?${params}`);
-  },
-};
-
-// Generic API client for direct use
-export const apiClient = {
-  get: async <T>(endpoint: string): Promise<{ data: T }> => {
-    const data = await apiRequest<T>(endpoint);
-    return { data };
-  },
-  post: async <T>(endpoint: string, body?: any): Promise<{ data: T }> => {
-    const data = await apiRequest<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    return { data };
-  },
-  patch: async <T>(endpoint: string, body?: any): Promise<{ data: T }> => {
-    const data = await apiRequest<T>(endpoint, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    });
-    return { data };
-  },
-  delete: async <T>(endpoint: string): Promise<{ data: T }> => {
-    const data = await apiRequest<T>(endpoint, {
-      method: 'DELETE',
-    });
-    return { data };
   },
 };

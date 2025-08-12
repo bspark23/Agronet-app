@@ -88,11 +88,25 @@ export function AppSidebar() {
 
   const dashboardMenuItems = isAuthenticated
     ? [
-        isAdmin && { title: "Admin Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
-        isBuyer && { title: "Buyer Dashboard", href: "/dashboard/buyer", icon: LayoutDashboard },
-        isSeller && { title: "Seller Dashboard", href: "/dashboard/seller", icon: LayoutDashboard },
-      ].filter(Boolean)
-    : []
+        isAdmin && {
+          title: 'Admin Dashboard',
+          href: '/dashboard/admin',
+          icon: LayoutDashboard,
+        },
+        isBuyer && {
+          title: 'Buyer Dashboard',
+          href: '/dashboard/buyer',
+          icon: LayoutDashboard,
+        },
+        isSeller && {
+          title: 'Seller Dashboard',
+          href: '/dashboard/seller',
+          icon: LayoutDashboard,
+        },
+      ].filter((item): item is { title: string; href: string; icon: any } =>
+        Boolean(item),
+      )
+    : [];
 
   const buyerSpecificItems = isBuyer
     ? [
@@ -112,20 +126,28 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center justify-between p-2">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/placeholder.svg?height=32&width=32" alt="AgroNet Logo" className="h-8 w-8" />
-            <span className="text-lg font-bold text-agronetGreen">AgroNet</span>
+        <div className='flex items-center justify-between p-2'>
+          <Link href='/' className='flex items-center gap-2'>
+            <img
+              src='/placeholder.svg?height=32&width=32'
+              alt='AgroNet Logo'
+              className='h-8 w-8'
+            />
+            <span className='text-lg font-bold text-agronetGreen'>AgroNet</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
-            <ChevronDown className="h-5 w-5" />
-            <span className="sr-only">Toggle Sidebar</span>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={toggleSidebar}
+            className='md:hidden'>
+            <ChevronDown className='h-5 w-5' />
+            <span className='sr-only'>Toggle Sidebar</span>
           </Button>
         </div>
         {isAuthenticated && user && (
-          <div className="p-2 text-sm text-gray-600">
+          <div className='p-2 text-sm text-gray-600'>
             <p>
-              {getGreeting()}, {user.name}!
+              {getGreeting()}, {user.firstname}!
             </p>
           </div>
         )}
@@ -136,7 +158,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>General</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {commonMenuItems.map((item) => (
+              {commonMenuItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
@@ -157,9 +179,11 @@ export function AppSidebar() {
               <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {dashboardMenuItems.map((item) => (
+                  {dashboardMenuItems.map(item => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname.startsWith(item.href)}>
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
@@ -180,9 +204,11 @@ export function AppSidebar() {
               <SidebarGroupLabel>Buyer Actions</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {buyerSpecificItems.map((item) => (
+                  {buyerSpecificItems.map(item => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={pathname === item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}>
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
@@ -203,9 +229,11 @@ export function AppSidebar() {
               <SidebarGroupLabel>Seller Actions</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {sellerSpecificItems.map((item) => (
+                  {sellerSpecificItems.map(item => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={pathname === item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}>
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
@@ -228,10 +256,12 @@ export function AppSidebar() {
                 <SidebarMenuButton>
                   <Settings />
                   <span>Settings</span>
-                  <ChevronUp className="ml-auto" />
+                  <ChevronUp className='ml-auto' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+              <DropdownMenuContent
+                side='top'
+                className='w-[--radix-popper-anchor-width]'>
                 <DropdownMenuItem>
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -241,9 +271,9 @@ export function AppSidebar() {
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
-          {authMenuItems.map((item) => (
+          {authMenuItems.map(item => (
             <SidebarMenuItem key={item.title}>
-              {item.href ? (
+              {'href' in item ? (
                 <SidebarMenuButton asChild>
                   <Link href={item.href}>
                     <item.icon />
@@ -261,5 +291,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

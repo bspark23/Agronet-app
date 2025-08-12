@@ -4,8 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { useProducts } from '@/hooks/use-products-api';
-import { useFarmerApplicationsApi } from '@/hooks/use-farmer-applications-api';
-import { usersApi } from '@/lib/api';
+import { usersApi, farmerApplicationsApi } from '@/lib/api';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,17 +22,11 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { Users, Store, ShoppingCart, FileText } from 'lucide-react'; // Import missing icons
-import type { User } from '@/lib/types';
-import type { FarmerApplication } from '@/hooks/use-farmer-applications-api';
+import type { User, FarmerApplication } from '@/lib/types';
 
 export default function AdminDashboardPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { products: allProducts, loading: productsLoading } = useProducts();
-  const {
-    getApplications,
-    updateApplicationStatus,
-    loading: applicationsLoading,
-  } = useFarmerApplicationsApi();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -68,10 +61,8 @@ export default function AdminDashboardPage() {
       setLocalUsers(apiUsers);
 
       // Load farmer applications from API
-      const applicationsResult = await getApplications();
-      if (applicationsResult) {
-        setLocalFarmerApplications(applicationsResult.applications);
-      }
+      const applications = await farmerApplicationsApi.getApplications();
+      setLocalFarmerApplications(applications);
 
       // TODO: Load actual chats count from API
       setTotalChats(0);
@@ -87,27 +78,43 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const apiUsers = await usersApi.getUsers();
+      setLocalUsers(apiUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadFarmerApplications = async () => {
+    try {
+      const applications = await farmerApplicationsApi.getApplications();
+      setLocalFarmerApplications(applications);
+    } catch (error) {
+      console.error('Error loading farmer applications:', error);
+    }
+  };
+
   const handleApprove = async (appId: string, userId: string) => {
     try {
-      // Update application status via API
-      const updatedApplication = await updateApplicationStatus(appId, {
-        status: 'approved',
-      });
+      // Update application status to approved (backend now handles user role updates)
+      const response = await farmerApplicationsApi.updateStatus(
+        appId,
+        'approved',
+      );
 
-      if (updatedApplication) {
-        // Update local state
-        const updatedApplications = farmerApplications.map(app =>
-          app._id === appId ? updatedApplication : app,
-        );
-        setLocalFarmerApplications(updatedApplications);
-
-        // Update users list (the backend should have already updated the user role)
-        await loadData(); // Reload to get updated user data
+      if (response.success) {
+        // Refresh data from server since backend updates both application and user
+        await Promise.all([loadFarmerApplications(), loadUsers()]);
 
         toast({
-          title: 'Application Approved',
-          description: 'The farmer application has been approved successfully.',
+          title: 'Farmer Application Approved!',
+          description: 'User role updated to Farmer and application approved.',
+          variant: 'default',
         });
+      } else {
+        throw new Error(response.error || 'Failed to approve application');
       }
     } catch (error) {
       console.error('Error approving application:', error);
@@ -121,22 +128,23 @@ export default function AdminDashboardPage() {
 
   const handleReject = async (appId: string) => {
     try {
-      // Update application status via API
-      const updatedApplication = await updateApplicationStatus(appId, {
-        status: 'rejected',
-      });
+      // Update application status to rejected (backend now handles user status updates)
+      const response = await farmerApplicationsApi.updateStatus(
+        appId,
+        'rejected',
+      );
 
-      if (updatedApplication) {
-        // Update local state
-        const updatedApplications = farmerApplications.map(app =>
-          app._id === appId ? updatedApplication : app,
-        );
-        setLocalFarmerApplications(updatedApplications);
+      if (response.success) {
+        // Refresh data from server since backend updates both application and user
+        await Promise.all([loadFarmerApplications(), loadUsers()]);
 
         toast({
-          title: 'Application Rejected',
+          title: 'Farmer Application Rejected',
           description: 'The farmer application has been rejected.',
+          variant: 'destructive',
         });
+      } else {
+        throw new Error(response.error || 'Failed to reject application');
       }
     } catch (error) {
       console.error('Error rejecting application:', error);
@@ -290,64 +298,93 @@ export default function AdminDashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User Name</TableHead>
-                    <TableHead>Business Name</TableHead>
-                    <TableHead>Business Email</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>ID Card</TableHead>
+                    <TableHead>Proof of Farm</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className='text-right'>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {farmerApplications.map(app => (
-                    <TableRow key={app._id}>
-                      <TableCell className='font-medium'>
-                        {app.user
-                          ? `${app.user.firstName} ${app.user.lastName}`
-                          : 'Unknown User'}
-                      </TableCell>
-                      <TableCell>{app.businessName}</TableCell>
-                      <TableCell>{app.businessEmail}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            app.status === 'pending'
-                              ? 'secondary'
-                              : app.status === 'approved'
-                              ? 'default'
-                              : 'destructive'
-                          }
-                          className={
-                            app.status === 'pending'
-                              ? 'bg-agronetOrange text-white'
-                              : app.status === 'approved'
-                              ? 'bg-agronetGreen text-white'
-                              : 'bg-red-500 text-white'
-                          }>
-                          {app.status.charAt(0).toUpperCase() +
-                            app.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        {app.status === 'pending' && (
-                          <div className='flex justify-end gap-2'>
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              onClick={() => handleApprove(app._id, app.userId)}
-                              className='border-agronetGreen text-agronetGreen hover:bg-agronetGreen hover:text-white'>
-                              Approve
-                            </Button>
-                            <Button
-                              variant='destructive'
-                              size='sm'
-                              onClick={() => handleReject(app._id)}>
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {farmerApplications.map(app => {
+                    const user =
+                      typeof app.userId === 'string'
+                        ? { firstname: 'Unknown', lastname: 'User' }
+                        : app.userId;
+                    return (
+                      <TableRow key={app._id}>
+                        <TableCell className='font-medium'>
+                          {typeof app.userId === 'string'
+                            ? app.userId
+                            : `${user.firstname} ${user.lastname}`}
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={app.idCardUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-agronetGreen hover:underline'>
+                            View ID Card
+                          </a>
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={app.proofOfFarmUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-agronetGreen hover:underline'>
+                            View Proof
+                          </a>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              app.status === 'pending'
+                                ? 'secondary'
+                                : app.status === 'approved'
+                                ? 'default'
+                                : 'destructive'
+                            }
+                            className={
+                              app.status === 'pending'
+                                ? 'bg-agronetOrange text-white'
+                                : app.status === 'approved'
+                                ? 'bg-agronetGreen text-white'
+                                : 'bg-red-500 text-white'
+                            }>
+                            {app.status.charAt(0).toUpperCase() +
+                              app.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className='text-right'>
+                          {app.status === 'pending' && (
+                            <div className='flex justify-end gap-2'>
+                              <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={() =>
+                                  handleApprove(
+                                    app._id,
+                                    typeof app.userId === 'string'
+                                      ? app.userId
+                                      : app.userId._id,
+                                  )
+                                }
+                                className='border-agronetGreen text-agronetGreen hover:bg-agronetGreen hover:text-white'>
+                                Approve
+                              </Button>
+                              <Button
+                                variant='destructive'
+                                size='sm'
+                                onClick={() => handleReject(app._id)}>
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { ContactForm } from '@/components/contact-form';
 import { HeroSlider } from '@/components/hero-slider';
 
 export default function HomePage() {
+  const { isSeller, isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,17 +71,20 @@ export default function HomePage() {
                   <Link href='/products'>🛒 Shop Now</Link>
                 </Button>
               </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}>
-                <Button
-                  asChild
-                  variant='outline'
-                  className='border-2 border-agronetOrange text-agronetOrange hover:bg-agronetOrange hover:text-white text-lg px-8 py-6 rounded-full shadow-lg bg-transparent'>
-                  <Link href='/apply-seller'>🚜 Become a Seller</Link>
-                </Button>
-              </motion.div>
+              {/* Only show Become a Seller button if user is not already a seller or admin */}
+              {!isSeller && !isAdmin && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}>
+                  <Button
+                    asChild
+                    variant='outline'
+                    className='border-2 border-agronetOrange text-agronetOrange hover:bg-agronetOrange hover:text-white text-lg px-8 py-6 rounded-full shadow-lg bg-transparent'>
+                    <Link href='/apply-seller'>🚜 Become a Seller</Link>
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </div>
         </section>

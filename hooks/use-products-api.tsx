@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { productsApi } from '@/lib/api';
-import { getProducts, setProducts } from '@/lib/local-storage-utils';
 import type { Product, CreateProductForm } from '@/lib/types';
 
 export function useProducts() {
@@ -10,21 +9,19 @@ export function useProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load products from API or fallback to localStorage
+  // Load products from API
   const loadProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Try to fetch from API first
       const apiProducts = await productsApi.getProducts();
       setProductsState(apiProducts);
-      setProducts(apiProducts); // Cache in localStorage
     } catch (err) {
-      console.warn('Failed to load products from API, using cached data:', err);
-      // Fallback to localStorage
-      const cachedProducts = getProducts();
-      setProductsState(cachedProducts);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load products';
+      console.warn('Failed to load products from API:', errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -36,16 +33,15 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.createProduct(productData);
 
-      if (response.data) {
+      if (response.success && response.data) {
         const newProduct = response.data;
         setProductsState(prev => [...prev, newProduct]);
-        setProducts([...products, newProduct]); // Update localStorage
         return { success: true, product: newProduct };
       }
 
       return {
         success: false,
-        error: response.message || 'Failed to create product',
+        error: response.error || response.message || 'Failed to create product',
       };
     } catch (err) {
       const errorMessage =
@@ -64,22 +60,17 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.updateProduct(id, updates);
 
-      if (response.data) {
+      if (response.success && response.data) {
         const updatedProduct = response.data;
         setProductsState(prev =>
           prev.map(product => (product._id === id ? updatedProduct : product)),
-        );
-        setProducts(
-          products.map(product =>
-            product._id === id ? updatedProduct : product,
-          ),
         );
         return { success: true, product: updatedProduct };
       }
 
       return {
         success: false,
-        error: response.message || 'Failed to update product',
+        error: response.error || response.message || 'Failed to update product',
       };
     } catch (err) {
       const errorMessage =
@@ -95,13 +86,15 @@ export function useProducts() {
       setError(null);
       const response = await productsApi.deleteProduct(id);
 
-      if (response.message) {
+      if (response.success) {
         setProductsState(prev => prev.filter(product => product._id !== id));
-        setProducts(products.filter(product => product._id !== id));
         return { success: true };
       }
 
-      return { success: false, error: 'Failed to delete product' };
+      return {
+        success: false,
+        error: response.error || response.message || 'Failed to delete product',
+      };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete product';

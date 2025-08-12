@@ -1,6 +1,6 @@
 // API configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   ENDPOINTS: {
     // Auth endpoints
     AUTH: {
@@ -13,6 +13,7 @@ export const API_CONFIG = {
       BASE: '/user',
       CREATE: '/user',
       LIST: '/user',
+      BY_ID: (id: string) => `/user/${id}`,
     },
     // Product endpoints
     PRODUCTS: {
@@ -91,14 +92,13 @@ export const API_HEADERS = {
 
 // Helper function to get auth headers
 export const getAuthHeaders = () => {
+  // Only use the JWT/token for Authorization; never fall back to user data
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('agronet_token');
-    const user = localStorage.getItem('agronet_user');
-    if (token || user) {
-      const authToken = token || (user ? JSON.parse(user)._id : null);
+    if (token) {
       return {
         ...API_HEADERS,
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${token}`,
       };
     }
   }

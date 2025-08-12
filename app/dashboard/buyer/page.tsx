@@ -15,7 +15,13 @@ import { Heart, Loader2, ShoppingCart, FileText } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function BuyerDashboardPage() {
-  const { user, isBuyer, isAdmin, isLoading: authLoading } = useAuth();
+  const {
+    user,
+    isBuyer,
+    isAdmin,
+    isSeller,
+    isLoading: authLoading,
+  } = useAuth();
   const { products: allProducts, loading: productsLoading } = useProducts();
   const router = useRouter();
   const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
@@ -117,21 +123,24 @@ export default function BuyerDashboardPage() {
               </Button>
             </CardContent>
           </Card>
-          <Card className='bg-agronetGreen-50 border-agronetGreen'>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Become a Seller
-              </CardTitle>
-              <FileText className='h-4 w-4 text-agronetGreen' />
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => router.push('/apply-seller')}
-                className='w-full bg-agronetGreen hover:bg-agronetGreen/90 text-white'>
-                Apply Now
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Only show Become a Seller card if user is not already a seller or admin */}
+          {!isSeller && !isAdmin && (
+            <Card className='bg-agronetGreen-50 border-agronetGreen'>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <CardTitle className='text-sm font-medium'>
+                  Become a Seller
+                </CardTitle>
+                <FileText className='h-4 w-4 text-agronetGreen' />
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => router.push('/apply-seller')}
+                  className='w-full bg-agronetGreen hover:bg-agronetGreen/90 text-white'>
+                  Apply Now
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
 
         {/* Wishlist Section */}

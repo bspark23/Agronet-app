@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
               {isVerified && (
                 <Verified
                   className='h-4 w-4 text-agronetGreen ml-1'
-                  title='Verified Seller'
+                  aria-label='Verified Seller'
                 />
               )}
             </div>
