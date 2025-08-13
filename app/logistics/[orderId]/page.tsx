@@ -6,35 +6,52 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, Truck, Clock, DollarSign, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   getOrders,
   setOrders,
-  getLogisticsCompanies,
   getOrderForms,
+  getLogisticsCompanies,
 } from "@/lib/local-storage-utils";
-import type { Order, LogisticsCompany, OrderForm } from "@/lib/types";
-import { Loader2, Truck, Clock, DollarSign, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import type { Order, OrderForm, LogisticsCompany } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LogisticsPage() {
   const params = useParams();
   const orderId = params.orderId as string;
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
-  const [order, setOrder] = useState<Order | null>(null);
-  const [orderForm, setOrderForm] = useState<OrderForm | null>(null);
-  const [logisticsCompanies, setLogisticsCompanies] = useState<
-    LogisticsCompany[]
-  >([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [selectedLogistics, setSelectedLogistics] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [orderForm, setOrderForm] = useState<OrderForm | null>(null);
+  const [logisticsCompanies, setLogisticsCompanies] = useState<LogisticsCompany[]>([]);
+
+  // Demo logistics companies if none exist
+  const demoLogisticsCompanies: LogisticsCompany[] = [
+    {
+      id: "logistics-1",
+      name: "FastTrack Express",
+      price: 12.99,
+      deliveryTime: "1-2 business days",
+      description: "Premium express delivery with real-time tracking and insurance",
+    },
+    {
+      id: "logistics-2",
+      name: "EcoShip Logistics",
+      price: 8.99,
+      deliveryTime: "3-5 business days",
+      description: "Eco-friendly shipping with carbon offset and sustainable packaging",
+    },
+  ];
 
   useEffect(() => {
     if (!authLoading) {
@@ -71,22 +88,28 @@ export default function LogisticsPage() {
         (form) => form.id === currentOrder.orderFormId
       );
 
+      // Initialize logistics companies if none exist
+      let companies = getLogisticsCompanies() || [];
+      if (companies.length === 0) {
+        companies = demoLogisticsCompanies;
+      }
+
       setOrder(currentOrder);
       setOrderForm(currentOrderForm || null);
-      setLogisticsCompanies(getLogisticsCompanies());
+      setLogisticsCompanies(companies);
       setLoading(false);
     }
   }, [orderId, isAuthenticated, user, authLoading, router, toast]);
 
   const handleConfirmLogistics = () => {
-    if (!order || !selectedCompany) return;
+    if (!order || !selectedLogistics) return;
 
     setConfirming(true);
 
     // Update order with selected logistics company
     const updatedOrder: Order = {
       ...order,
-      logisticsCompanyId: selectedCompany,
+      logisticsCompanyId: selectedLogistics,
       status: "shipped",
     };
 
@@ -104,13 +127,12 @@ export default function LogisticsPage() {
       variant: "default",
     });
 
-    // Redirect to a success page or back to chats
     setTimeout(() => {
       router.push("/chats");
     }, 2000);
   };
 
-  if (authLoading || loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
@@ -123,7 +145,7 @@ export default function LogisticsPage() {
   }
 
   const selectedCompanyDetails = logisticsCompanies.find(
-    (c) => c.id === selectedCompany
+    (c) => c.id === selectedLogistics
   );
 
   return (
@@ -165,8 +187,8 @@ export default function LogisticsPage() {
             </CardHeader>
             <CardContent>
               <RadioGroup
-                value={selectedCompany}
-                onValueChange={setSelectedCompany}
+                value={selectedLogistics}
+                onValueChange={setSelectedLogistics}
               >
                 <div className="space-y-4">
                   {logisticsCompanies.map((company) => (
@@ -179,7 +201,7 @@ export default function LogisticsPage() {
                       <Label
                         htmlFor={company.id}
                         className={`flex items-center space-x-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          selectedCompany === company.id
+                          selectedLogistics === company.id
                             ? "border-agronetGreen bg-agronetGreen/5"
                             : "border-gray-200 hover:border-agronetGreen/50"
                         }`}
@@ -257,7 +279,7 @@ export default function LogisticsPage() {
 
           <Button
             onClick={handleConfirmLogistics}
-            disabled={!selectedCompany || confirming}
+            disabled={!selectedLogistics || confirming}
             className="w-full bg-agronetGreen hover:bg-agronetGreen/90 text-white py-6 text-lg"
           >
             {confirming ? (
