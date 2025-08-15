@@ -45,6 +45,7 @@ export default function LoginPage() {
       });
     }
   };
+  };
 
   return (
     <div className='flex min-h-screen items-center justify-center bg-agronetGreen-50 p-4'>
@@ -52,6 +53,12 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg"
+      >
+        <h1 className="mb-6 text-center text-3xl font-bold text-agronetGreen">
+          Login to HarvestLink
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
         className='w-full max-w-md rounded-lg bg-white p-8 shadow-lg'>
         <h1 className='mb-6 text-center text-3xl font-bold text-agronetGreen'>
           Login to AgroNet

@@ -11,9 +11,9 @@ import { ClientProviders } from '@/components/client-providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'AgroNet - Agricultural Marketplace',
-  description: 'Connect, trade, and chat in the agricultural marketplace.',
-  generator: 'v0.dev',
+  title: "HarvestLink - Agricultural Marketplace",
+  description: "Connect, trade, and chat in the agricultural marketplace.",
+  generator: "v0.dev",
 };
 
 export default async function RootLayout({

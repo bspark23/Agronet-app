@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Sidebar,
@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import {
   Home,
   ShoppingCart,
@@ -29,47 +29,57 @@ import {
   ChevronUp,
   Settings,
   LayoutDashboard,
-} from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/hooks/use-auth"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import { getAdminNotification, setAdminNotification } from "@/lib/local-storage-utils"
-import { useToast } from "@/hooks/use-toast"
+} from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  getAdminNotification,
+  setAdminNotification,
+} from "@/lib/local-storage-utils";
+import { useToast } from "@/hooks/use-toast";
 
 export function AppSidebar() {
-  const { user, isAuthenticated, isAdmin, isBuyer, isSeller, logout } = useAuth()
-  const { state, toggleSidebar } = useSidebar()
-  const router = useRouter()
-  const pathname = usePathname()
-  const { toast } = useToast()
-  const [hasAdminNotification, setHasAdminNotification] = useState(false)
+  const { user, isAuthenticated, isAdmin, isBuyer, isSeller, logout } =
+    useAuth();
+  const { state, toggleSidebar } = useSidebar();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const [hasAdminNotification, setHasAdminNotification] = useState(false);
 
   useEffect(() => {
     if (isAdmin) {
-      const notificationStatus = getAdminNotification()
-      setHasAdminNotification(notificationStatus)
+      const notificationStatus = getAdminNotification();
+      setHasAdminNotification(notificationStatus);
       if (notificationStatus) {
         toast({
           title: "New Seller Application!",
-          description: "A new user has applied to become a seller. Check the admin dashboard.",
+          description:
+            "A new user has applied to become a seller. Check the admin dashboard.",
           variant: "success",
           duration: 5000,
-        })
-        setAdminNotification(false) // Clear notification after showing
+        });
+        setAdminNotification(false); // Clear notification after showing
       }
     }
-  }, [isAdmin, toast])
+  }, [isAdmin, toast]);
 
   const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour >= 5 && hour < 12) return "Good Morning"
-    if (hour >= 12 && hour < 17) return "Good Afternoon"
-    if (hour >= 17 && hour < 22) return "Good Evening"
-    return "Good Night"
-  }
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning";
+    if (hour >= 12 && hour < 17) return "Good Afternoon";
+    if (hour >= 17 && hour < 22) return "Good Evening";
+    return "Good Night";
+  };
 
   const commonMenuItems = [
     { title: "Home", href: "/", icon: Home },
@@ -77,14 +87,14 @@ export function AppSidebar() {
     { title: "Verified Sellers", href: "/verified-sellers", icon: Store },
     { title: "About", href: "/about", icon: FileText },
     { title: "Contact", href: "/contact", icon: MessageSquare },
-  ]
+  ];
 
   const authMenuItems = isAuthenticated
     ? [{ title: "Logout", onClick: logout, icon: LogOut }]
     : [
         { title: "Login", href: "/login", icon: LogIn },
         { title: "Register", href: "/register", icon: UserPlus },
-      ]
+      ];
 
   const dashboardMenuItems = isAuthenticated
     ? [
@@ -114,14 +124,14 @@ export function AppSidebar() {
         { title: "Apply to Sell", href: "/apply-seller", icon: PlusCircle },
         { title: "My Chats", href: "/chats", icon: MessageSquare },
       ]
-    : []
+    : [];
 
   const sellerSpecificItems = isSeller
     ? [
         { title: "Post Product", href: "/post-product", icon: PlusCircle },
         { title: "My Chats", href: "/chats", icon: MessageSquare },
       ]
-    : []
+    : [];
 
   return (
     <Sidebar>
@@ -291,5 +301,6 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+  );
   );
 }

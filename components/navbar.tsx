@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,17 +10,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MenuIcon, UserCircle2 } from "lucide-react"
-import { useSidebar } from "@/components/ui/sidebar"
-import { usePathname } from "next/navigation"
-import { motion } from "framer-motion"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MenuIcon, UserCircle2 } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 export function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth()
-  const { toggleSidebar } = useSidebar()
-  const pathname = usePathname()
+  const { user, isAuthenticated, logout } = useAuth();
+  const { toggleSidebar } = useSidebar();
+  const pathname = usePathname();
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -28,7 +28,7 @@ export function Navbar() {
     { name: "Verified Sellers", href: "/verified-sellers" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
-  ]
+  ];
 
   return (
     <motion.header
@@ -47,14 +47,15 @@ export function Navbar() {
             <span className='sr-only'>Toggle navigation</span>
           </Button>
           <Link
-            href='/'
-            className='flex items-center gap-2 font-semibold text-agronetGreen'>
+            href="/"
+            className="flex items-center gap-2 font-semibold text-agronetGreen"
+          >
             <img
-              src='/placeholder.svg?height=24&width=24'
-              alt='AgroNet Logo'
-              className='h-6 w-6'
+              src="/harvestlink-logo.svg"
+              alt="HarvestLink Logo"
+              className="h-8 w-8"
             />
-            <span>AgroNet</span>
+            <span>HarvestLink</span>
           </Link>
         </div>
         <nav className='hidden md:flex gap-6'>

@@ -1,0 +1,42 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#4CAF50" stroke-width="10"/>
+  
+  <!-- Plant/leaf design at top -->
+  <g transform="translate(100, 40)">
+    <!-- Center leaf -->
+    <ellipse cx="0" cy="0" rx="8" ry="20" fill="#4CAF50"/>
+    <!-- Left leaf -->
+    <ellipse cx="-15" cy="5" rx="6" ry="15" fill="#4CAF50" transform="rotate(-30)"/>
+    <!-- Right leaf -->
+    <ellipse cx="15" cy="5" rx="6" ry="15" fill="#4CAF50" transform="rotate(30)"/>
+  </g>
+  
+  <!-- Connection dots -->
+  <circle cx="70" cy="70" r="4" fill="#FFA500"/>
+  <circle cx="130" cy="70" r="4" fill="#FFA500"/>
+  <circle cx="60" cy="80" r="3" fill="#FFA500"/>
+  <circle cx="140" cy="80" r="3" fill="#FFA500"/>
+  
+  <!-- Handshake -->
+  <g transform="translate(100, 120)">
+    <!-- Left hand (green) -->
+    <path d="M -30 -10 Q -35 -15 -40 -10 Q -45 -5 -40 0 L -20 0 Q -15 -5 -20 -10 Z" fill="#4CAF50"/>
+    <!-- Right hand (orange) -->
+    <path d="M 30 -10 Q 35 -15 40 -10 Q 45 -5 40 0 L 20 0 Q 15 -5 20 -10 Z" fill="#FFA500"/>
+    <!-- Connecting area -->
+    <rect x="-20" y="-5" width="40" height="10" fill="#4CAF50" opacity="0.7"/>
+    <rect x="-15" y="-5" width="30" height="10" fill="#FFA500" opacity="0.7"/>
+  </g>
+  
+  <!-- Bottom connection lines -->
+  <g transform="translate(100, 140)">
+    <circle cx="-15" cy="0" r="2" fill="#FFA500"/>
+    <circle cx="-10" cy="5" r="2" fill="#FFA500"/>
+    <circle cx="-5" cy="0" r="2" fill="#FFA500"/>
+    <circle cx="0" cy="5" r="2" fill="#FFA500"/>
+    <circle cx="5" cy="0" r="2" fill="#FFA500"/>
+    <circle cx="10" cy="5" r="2" fill="#FFA500"/>
+    <circle cx="15" cy="0" r="2" fill="#FFA500"/>
+  </g>
+</svg>
