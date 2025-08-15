@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const profile = await authApi.getProfile();
+
         if (active) setUser(profile as unknown as User);
       } catch (err) {
         // Distinguish unauthorized token vs transient/network errors.
@@ -87,12 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<any> => {
     try {
       console.log('🔐 Attempting login for:', email);
       const response = await authApi.login({ email, password });
-
-      console.log(response);
 
       if (response?.user && response?.token) {
         console.log('✅ Login successful, storing token');
@@ -106,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('agronet_token');
           return false;
         }
-        return true;
+        return response.user;
       }
 
       console.log('❌ Login failed: Invalid response');
@@ -159,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('agronet_token');
+    localStorage.clear();
   };
 
   // Helper functions

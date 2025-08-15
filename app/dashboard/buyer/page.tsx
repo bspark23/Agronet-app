@@ -30,27 +30,27 @@ export default function BuyerDashboardPage() {
     }
 
     // User is authenticated, load data
-    loadWishlist();
+    // loadWishlist();
     setLoading(false);
   }, [isBuyer, isAdmin, authLoading, productsLoading, allProducts, router]);
 
-  const loadWishlist = () => {
-    const userWishlist = getWishlist().filter(
-      item => item.userId === user?._id,
-    );
-    const productsInWishlist = userWishlist
-      .map(item => allProducts.find(p => p._id === item.productId))
-      .filter(Boolean) as Product[];
-    setWishlistProducts(productsInWishlist)
-  }
+  // const loadWishlist = () => {
+  //   const userWishlist = getWishlist().filter(
+  //     item => item.userId === user?._id,
+  //   );
+  //   const productsInWishlist = userWishlist
+  //     .map(item => allProducts.find(p => p._id === item.productId))
+  //     .filter(Boolean) as Product[];
+  //   setWishlistProducts(productsInWishlist)
+  // }
 
   const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour >= 5 && hour < 12) return "Good Morning"
-    if (hour >= 12 && hour < 17) return "Good Afternoon"
-    if (hour >= 17 && hour < 22) return "Good Evening"
-    return "Good Night"
-  }
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good Morning';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon';
+    if (hour >= 17 && hour < 22) return 'Good Evening';
+    return 'Good Night';
+  };
 
   if (authLoading || productsLoading || loading) {
     return (
@@ -61,7 +61,7 @@ export default function BuyerDashboardPage() {
   }
 
   if (!isBuyer && !isAdmin) {
-    return null // Should be redirected by useEffect
+    return null; // Should be redirected by useEffect
   }
 
   return (

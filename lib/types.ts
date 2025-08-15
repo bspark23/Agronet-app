@@ -185,8 +185,6 @@ export interface Order {
 }
 
 export interface LocalStorageData {
-  users: User[];
-  products: Product[];
   sellerApplications: FarmerApplication[];
   chats: Chat[];
   wishlist: WishlistItem[];
