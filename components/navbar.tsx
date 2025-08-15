@@ -78,7 +78,7 @@ export function Navbar() {
                   className='relative h-8 w-8 rounded-full'>
                   <Avatar className='h-8 w-8'>
                     <AvatarImage
-                      src='/public/avatar.png'
+                      src='/avatar.png'
                       alt={`${user?.firstname} ${user?.lastname}` || 'User'}
                     />
                     <AvatarFallback>

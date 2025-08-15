@@ -32,6 +32,8 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  // legacy alias used across the app in some components
+  loading?: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isBuyer: boolean;
@@ -50,13 +52,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const bootstrap = async () => {
       try {
         const token = localStorage.getItem('agronet_token');
-        if (!token) return;
+        if (!token) {
+          // No token: mark not authenticated and stop loading so UI doesn't hang
+          if (active) setUser(null);
+          if (active) setIsLoading(false);
+          return;
+        }
         const profile = await authApi.getProfile();
         if (active) setUser(profile as unknown as User);
       } catch (err) {
-        // Token invalid/expired
-        localStorage.removeItem('agronet_token');
-        if (active) setUser(null);
+        // Distinguish unauthorized token vs transient/network errors.
+        const errMsg = (err as any)?.message || String(err);
+        console.warn('Auth bootstrap: failed to fetch profile:', errMsg);
+        const shouldRemoveToken =
+          errMsg.includes('401') ||
+          /unauthor/i.test(errMsg) ||
+          /invalid token/i.test(errMsg);
+
+        if (shouldRemoveToken) {
+          // Token is invalid or expired -> remove it and clear user
+          localStorage.removeItem('agronet_token');
+          if (active) setUser(null);
+        } else {
+          // Transient error (network/backend down) - keep token and mark user null for now
+          if (active) setUser(null);
+        }
       } finally {
         if (active) setIsLoading(false);
       }
@@ -71,6 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🔐 Attempting login for:', email);
       const response = await authApi.login({ email, password });
+
+      console.log(response);
 
       if (response?.user && response?.token) {
         console.log('✅ Login successful, storing token');
@@ -153,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isLoading,
+        loading: isLoading,
         isAuthenticated,
         isAdmin,
         isBuyer,

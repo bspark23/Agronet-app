@@ -36,10 +36,11 @@ export default function PostProductPage() {
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
   const [quantity, setQuantity] = useState("")
-  const [image, setImage] = useState("")
-  const [category, setCategory] = useState("")
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [category, setCategory] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -103,11 +104,9 @@ export default function PostProductPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setImage(objectUrl);
     }
   };
 
@@ -129,7 +128,7 @@ export default function PostProductPage() {
       description,
       price: Number.parseFloat(price),
       quantity: Number.parseInt(quantity),
-      images: image ? [image] : [],
+      images: imageFile ? [imageFile] : image ? [image] : [],
       location: {
         type: 'Point' as const,
         coordinates: [0, 0] as [number, number], // TODO: Get actual coordinates
@@ -161,6 +160,14 @@ export default function PostProductPage() {
             description: 'Your product is now live on the marketplace.',
             variant: 'default',
           });
+          // clear fields
+          setName('');
+          setDescription('');
+          setPrice('');
+          setQuantity('');
+          setImage(null);
+          setImageFile(null);
+          // optional: navigate back to seller dashboard
           router.push('/dashboard/seller');
         } else {
           toast({

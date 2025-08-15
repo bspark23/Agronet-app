@@ -17,12 +17,18 @@ export function useMessages() {
     try {
       setLoading(true);
       setError(null);
-      const threadsData = await messagesApi.getThreads();
-      setThreads(threadsData);
+      const response = await messagesApi.getThreads();
+      if (response.success && Array.isArray(response.data)) {
+        setThreads(response.data);
+      } else {
+        setThreads([]);
+        setError('Invalid response format');
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load threads';
       setError(errorMessage);
+      setThreads([]);
     } finally {
       setLoading(false);
     }
@@ -35,12 +41,20 @@ export function useMessages() {
       setError(null);
 
       // Load thread details
-      const threadData = await messagesApi.getThread(threadId);
-      setCurrentThread(threadData);
+      const threadResponse = await messagesApi.getThread(threadId);
+      if (threadResponse.success && threadResponse.data) {
+        setCurrentThread(threadResponse.data);
+      } else {
+        throw new Error('Failed to load thread');
+      }
 
       // Load messages
-      const messagesData = await messagesApi.getThreadMessages(threadId);
-      setMessages(messagesData);
+      const messagesResponse = await messagesApi.getThreadMessages(threadId);
+      if (messagesResponse.success && Array.isArray(messagesResponse.data)) {
+        setMessages(messagesResponse.data);
+      } else {
+        setMessages([]);
+      }
 
       // Mark thread as read
       await messagesApi.markThreadAsRead(threadId);

@@ -34,90 +34,119 @@ export default function ChatsPage() {
 
   const getOtherParticipant = (
     thread: MessageThread,
-  ): { role: 'buyer' | 'farmer'; id: string } => {
-    // Determine the other participant's role and id
-    const isBuyerCurrent = thread.buyerId === user?._id;
-    return isBuyerCurrent
-      ? { role: 'farmer', id: thread.farmerId }
-      : { role: 'buyer', id: thread.buyerId };
+  ): { role: 'buyer' | 'farmer'; id: string; name: string } => {
+    // Helper to extract a display name from a populated user or fallback
+    const extractName = (p: any): string => {
+      if (!p) return '';
+      if (typeof p === 'string') return '';
+      if (p.firstname || p.lastname) {
+        return `${p.firstname || ''} ${p.lastname || ''}`.trim();
+      }
+      if (p.fullName) return p.fullName;
+      if (p.email) return p.email.split('@')[0];
+      return '';
+    };
+
+    // Determine whether the current user is the buyer (ids can be populated objects or strings)
+    const buyerIdVal =
+      typeof thread.buyerId === 'object' ? thread.buyerId._id : thread.buyerId;
+    const farmerIdVal =
+      typeof thread.farmerId === 'object'
+        ? thread.farmerId._id
+        : thread.farmerId;
+    const isBuyerCurrent = buyerIdVal === user?._id;
+
+    const otherObj = isBuyerCurrent ? thread.farmerId : thread.buyerId;
+    const otherId = typeof otherObj === 'object' ? otherObj._id : otherObj;
+    const otherName = extractName(otherObj);
+
+    console.log(otherObj, otherId, otherName);
+
+    return {
+      role: isBuyerCurrent ? 'farmer' : 'buyer',
+      id: otherId,
+      name: otherName,
+    };
   };
 
   const formatLastMessageTime = (date: Date | string): string => {
-    const messageDate = new Date(date)
-    const now = new Date()
-    const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60)
-    
+    const messageDate = new Date(date);
+    const now = new Date();
+    const diffInHours =
+      (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+
     if (diffInHours < 24) {
-      return messageDate.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit', 
-        hour12: true 
-      })
+      return messageDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
     } else {
-      return messageDate.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      })
+      return messageDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
     }
-  }
+  };
 
   const formatTimestamp = (timestamp: number): string => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 1) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     } else if (diffDays <= 7) {
-      return date.toLocaleDateString([], { weekday: "short" })
+      return date.toLocaleDateString([], { weekday: 'short' });
     } else {
-      return date.toLocaleDateString()
+      return date.toLocaleDateString();
     }
-  }
+  };
 
   if (authLoading || messagesLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-agronetGreen" />
+      <div className='flex min-h-screen items-center justify-center'>
+        <Loader2 className='h-8 w-8 animate-spin text-agronetGreen' />
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated || !user) {
-    return null // Should be redirected by useEffect
+    return null; // Should be redirected by useEffect
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className='flex min-h-screen flex-col'>
         <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-8 md:px-6">
-          <div className="text-center text-red-600">
+        <main className='flex-1 container mx-auto px-4 py-8 md:px-6'>
+          <div className='text-center text-red-600'>
             <p>Error loading chats: {error}</p>
-            <button 
+            <button
               onClick={loadThreads}
-              className="mt-4 px-4 py-2 bg-agronetGreen text-white rounded hover:bg-green-600"
-            >
+              className='mt-4 px-4 py-2 bg-agronetGreen text-white rounded hover:bg-green-600'>
               Try Again
             </button>
           </div>
         </main>
         <Footer />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className='flex flex-col min-h-screen'>
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8 md:px-6">
+      <main className='flex-1 container mx-auto px-4 py-8 md:px-6'>
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-3xl font-bold text-agronetGreen mb-6 text-center"
-        >
+          className='text-3xl font-bold text-agronetGreen mb-6 text-center'>
           Your Chats
         </motion.h1>
 
@@ -126,16 +155,17 @@ export default function ChatsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center text-gray-600 text-lg mt-10"
-          >
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            className='text-center text-gray-600 text-lg mt-10'>
+            <MessageSquare className='h-12 w-12 mx-auto mb-4 text-gray-400' />
             <p>You don&apos;t have any active chats yet.</p>
             <p>Start by messaging a farmer from a product page!</p>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {threads.map((thread, index) => {
               const other = getOtherParticipant(thread);
+
+              console.log(other);
 
               return (
                 <motion.div
@@ -149,17 +179,18 @@ export default function ChatsPage() {
                     <CardContent className='flex items-center p-4 gap-4'>
                       <Avatar className='h-12 w-12'>
                         <AvatarImage
-                          src='/placeholder.svg?height=48&width=48'
-                          alt={other.role}
+                          src='/avatar.png'
+                          alt={other.name || other.role}
                         />
                         <AvatarFallback>
-                          {other.role.charAt(0).toUpperCase()}
+                          {(other.name || other.role).charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className='flex-1 overflow-hidden'>
                         <div className='flex justify-between items-center'>
                           <h3 className='font-semibold text-lg truncate'>
-                            {other.role === 'farmer' ? 'Farmer' : 'Buyer'}
+                            {other.name ||
+                              (other.role === 'farmer' ? 'Farmer' : 'Buyer')}
                           </h3>
                           <span className='text-xs text-gray-500'>
                             {formatLastMessageTime(thread.lastMessageAt)}
@@ -179,5 +210,5 @@ export default function ChatsPage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }

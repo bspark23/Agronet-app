@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
           <p className='text-agronetGreen font-bold text-xl mt-1'>
-            ${product.price.toFixed(2)}
+            #{product.price.toFixed(2)}
           </p>
           {seller && (
             <div className='flex items-center text-sm text-gray-600 mt-2'>

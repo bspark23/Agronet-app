@@ -25,13 +25,21 @@ async function apiRequest<T>(
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
 
   try {
+    const headers = {
+      ...getAuthHeaders(),
+      ...options.headers,
+    } as Record<string, string> | undefined;
+
+    // If body is FormData, let the browser set Content-Type
+    const isFormData = options.body instanceof FormData;
+    if (isFormData) {
+      // remove Content-Type if present
+      if (headers) delete headers['Content-Type'];
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-        ...options.headers,
-      },
+      headers,
     });
 
     const data = await response.json();
@@ -116,6 +124,54 @@ export const productsApi = {
   createProduct: async (
     productData: CreateProductForm,
   ): Promise<ApiResponse<Product>> => {
+    // If productData contains a File in images[0], upload as multipart/form-data
+    const hasFile =
+      productData.images &&
+      productData.images.length > 0 &&
+      productData.images[0] instanceof File;
+
+    if (hasFile) {
+      const form = new FormData();
+      form.append('farmerId', productData.farmerId);
+      form.append('name', productData.name);
+      form.append('description', productData.description);
+      form.append('price', String(productData.price));
+      form.append('quantity', String(productData.quantity));
+      form.append('location', JSON.stringify(productData.location));
+      // append file
+      form.append('image', productData.images[0] as File);
+
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUCTS.CREATE}`;
+      const headers = { ...getAuthHeaders() } as Record<string, string>;
+      // If we're sending FormData, remove any Content-Type set by helpers so
+      // the browser can set the correct multipart boundary header.
+      if (form instanceof FormData) {
+        // debug: log form entries so we can inspect what's being sent
+        for (const pair of Array.from((form as FormData).entries())) {
+          // avoid logging large binary content; show filename for file fields
+          if (pair[1] instanceof File) {
+            console.log('FormData entry:', pair[0], (pair[1] as File).name);
+          } else {
+            console.log('FormData entry:', pair[0], pair[1]);
+          }
+        }
+
+        // remove any Content-Type headers regardless of casing
+        delete headers['Content-Type'];
+        delete headers['content-type'];
+      }
+      const response = await fetch(url, {
+        method: 'POST',
+        body: form,
+        headers,
+      });
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || data.error || 'Upload failed');
+      return data;
+    }
+
     return apiRequest(API_CONFIG.ENDPOINTS.PRODUCTS.CREATE, {
       method: 'POST',
       body: JSON.stringify(productData),
@@ -214,26 +270,36 @@ export const reviewsApi = {
 // Messages API
 export const messagesApi = {
   // Thread operations
-  getThreads: async (): Promise<MessageThread[]> => {
+  getThreads: async (): Promise<ApiResponse<MessageThread[]>> => {
     return apiRequest(API_CONFIG.ENDPOINTS.MESSAGES.THREADS);
   },
 
   createThread: async (threadData: {
     buyerId: string;
     farmerId: string;
-  }): Promise<MessageThread> => {
+  }): Promise<ApiResponse<MessageThread>> => {
     return apiRequest(API_CONFIG.ENDPOINTS.MESSAGES.CREATE_THREAD, {
       method: 'POST',
       body: JSON.stringify(threadData),
     });
   },
 
-  getThread: async (threadId: string): Promise<MessageThread> => {
+  getThread: async (threadId: string): Promise<ApiResponse<MessageThread>> => {
     return apiRequest(API_CONFIG.ENDPOINTS.MESSAGES.THREAD_BY_ID(threadId));
   },
 
-  getThreadMessages: async (threadId: string): Promise<Message[]> => {
-    return apiRequest(API_CONFIG.ENDPOINTS.MESSAGES.THREAD_MESSAGES(threadId));
+  getThreadMessages: async (
+    threadId: string,
+  ): Promise<ApiResponse<Message[]>> => {
+    // Backend historically returned a raw array for this endpoint. Normalize
+    // so callers always receive an ApiResponse<Message[]> shape.
+    const resp = await apiRequest(
+      API_CONFIG.ENDPOINTS.MESSAGES.THREAD_MESSAGES(threadId),
+    );
+    if (Array.isArray(resp)) {
+      return { success: true, data: resp };
+    }
+    return resp as ApiResponse<Message[]>;
   },
 
   markThreadAsRead: async (threadId: string): Promise<ApiResponse<void>> => {
@@ -366,5 +432,31 @@ export const geolocationApi = {
       radius: radius.toString(),
     });
     return apiRequest(`${API_CONFIG.ENDPOINTS.GEOLOCATION.NEARBY}?${params}`);
+  },
+};
+
+// Wishlist API
+export const wishlistApi = {
+  addToWishlist: async (productId: string): Promise<ApiResponse<any>> => {
+    return apiRequest(API_CONFIG.ENDPOINTS.WISHLIST.ADD, {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
+    });
+  },
+
+  getUserWishlist: async (): Promise<ApiResponse<any[]>> => {
+    return apiRequest(API_CONFIG.ENDPOINTS.WISHLIST.LIST);
+  },
+
+  removeFromWishlist: async (productId: string): Promise<ApiResponse<void>> => {
+    return apiRequest(API_CONFIG.ENDPOINTS.WISHLIST.REMOVE(productId), {
+      method: 'DELETE',
+    });
+  },
+
+  checkWishlist: async (
+    productId: string,
+  ): Promise<{ success: boolean; isInWishlist: boolean }> => {
+    return apiRequest(API_CONFIG.ENDPOINTS.WISHLIST.CHECK(productId));
   },
 };

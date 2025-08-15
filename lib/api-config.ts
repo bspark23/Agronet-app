@@ -81,6 +81,14 @@ export const API_CONFIG = {
       BASE: '/geolocation',
       NEARBY: '/geolocation/nearby',
     },
+    // Wishlist endpoints
+    WISHLIST: {
+      BASE: '/wishlist',
+      ADD: '/wishlist',
+      LIST: '/wishlist',
+      REMOVE: (productId: string) => `/wishlist/${productId}`,
+      CHECK: (productId: string) => `/wishlist/check/${productId}`,
+    },
   },
 };
 

@@ -6,21 +6,14 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { useProducts } from '@/hooks/use-products-api';
 import { useMessages } from '@/hooks/use-messages-api';
-import { usersApi } from '@/lib/api';
+import { usersApi, wishlistApi } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  getWishlist,
-  setWishlist,
-  isInWishlist as checkWishlist,
-  addToWishlist,
-  removeFromWishlist,
-} from '@/lib/local-storage-utils';
-import type { Product, User } from "@/lib/types"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Verified, Heart, MessageSquare, Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { motion } from "framer-motion"
+import type { Product, User } from '@/lib/types';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Verified, Heart, MessageSquare, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -64,7 +57,12 @@ export default function ProductPage() {
 
         // Check if product is in wishlist
         if (user) {
-          setIsInWishlist(checkWishlist(user._id, id as string));
+          try {
+            const wishlistCheck = await wishlistApi.checkWishlist(id as string);
+            setIsInWishlist(wishlistCheck.isInWishlist);
+          } catch (error) {
+            console.error('Error checking wishlist:', error);
+          }
         }
       } catch (error) {
         console.error('Error loading product data:', error);
@@ -72,9 +70,9 @@ export default function ProductPage() {
     };
 
     loadProductData();
-  }, [id, getProduct]);
+  }, [id]);
 
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = async () => {
     if (!isAuthenticated || !user) {
       toast({
         title: 'Login Required',
@@ -85,20 +83,34 @@ export default function ProductPage() {
       return;
     }
 
-    if (isInWishlist) {
-      removeFromWishlist(user._id, id as string);
+    try {
+      if (isInWishlist) {
+        const result = await wishlistApi.removeFromWishlist(id as string);
+        if (result.success) {
+          setIsInWishlist(false);
+          toast({
+            title: 'Removed from Wishlist',
+            description: `${product?.name} has been removed from your wishlist.`,
+          });
+        }
+      } else {
+        const result = await wishlistApi.addToWishlist(id as string);
+        if (result.success) {
+          setIsInWishlist(true);
+          toast({
+            title: 'Added to Wishlist!',
+            description: `${product?.name} has been added to your wishlist.`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
       toast({
-        title: 'Removed from Wishlist',
-        description: `${product?.name} has been removed from your wishlist.`,
-      });
-    } else {
-      addToWishlist(user._id, id as string);
-      toast({
-        title: 'Added to Wishlist!',
-        description: `${product?.name} has been added to your wishlist.`,
+        title: 'Error',
+        description: 'Failed to update wishlist. Please try again.',
+        variant: 'destructive',
       });
     }
-    setIsInWishlist(!isInWishlist);
   };
 
   const handleContactFarmer = async () => {
@@ -131,15 +143,66 @@ export default function ProductPage() {
     }
 
     try {
-      // Determine who is buyer and who is farmer
-      const buyerId = user.role === 'buyer' ? user._id : seller._id;
-      const farmerId = user.role === 'farmer' ? user._id : seller._id;
+      // Determine who is buyer and who is farmer based on current user role
+      let buyerId, farmerId;
 
-      // Create or get existing thread
-      const thread = await createOrGetThread(buyerId, farmerId);
+      if (user.role === 'buyer') {
+        buyerId = user._id;
+        farmerId = seller._id;
+      } else if (user.role === 'farmer') {
+        // If current user is a farmer contacting another farmer, treat current user as buyer
+        buyerId = user._id;
+        farmerId = seller._id;
+      } else {
+        // Default case: treat current user as buyer
+        buyerId = user._id;
+        farmerId = seller._id;
+      }
 
-      // Navigate to the chat
-      router.push(`/chat/${thread._id}`);
+      console.log('Creating thread with:', { buyerId, farmerId });
+
+      // Create or get existing thread. The hook may return either the raw
+      // thread object or an ApiResponse wrapper { success, data }.
+      const threadResp = await createOrGetThread(buyerId, farmerId);
+
+      console.log('Thread created/retrieved:', threadResp);
+
+      // Resolve thread id for navigation (support both shapes)
+      let threadId: string | undefined;
+      if (threadResp) {
+        // If it's an ApiResponse with data
+        if (typeof threadResp === 'object' && 'success' in threadResp) {
+          if (threadResp.success && threadResp.data) {
+            threadId =
+              (threadResp.data as any)._id || (threadResp.data as any).id;
+          }
+        }
+
+        // If it's the raw thread object
+        if (
+          !threadId &&
+          typeof threadResp === 'object' &&
+          '_id' in threadResp
+        ) {
+          threadId = (threadResp as any)._id;
+        }
+      }
+
+      if (!threadId) {
+        console.error(
+          'Failed to determine thread id from response:',
+          threadResp,
+        );
+        toast({
+          title: 'Failed to Start Chat',
+          description: 'Could not determine chat id. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Navigate to the specific chat page using the resolved thread ID
+      router.push(`/chat/${threadId}`);
 
       toast({
         title: 'Chat Started',
@@ -201,7 +264,7 @@ export default function ProductPage() {
               )}
             </div>
             <p className='text-5xl font-extrabold text-agronetOrange'>
-              ${product.price.toFixed(2)}
+              #{product.price.toFixed(2)}
             </p>
             <p className='text-gray-800 leading-relaxed'>
               {product.description}

@@ -1,24 +1,21 @@
 "use client"
 
-import Link from "next/link"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { useProducts } from '@/hooks/use-products-api';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { wishlistApi } from '@/lib/api';
 import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { getWishlist, setWishlist } from '@/lib/local-storage-utils';
+import { Footer } from '@/components/footer';
 import type { Product } from '@/lib/types';
 import { ProductCard } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
 import { Heart, Loader2, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
+import Link from 'next/link';
 
 export default function WishlistPage() {
   const { user, isAuthenticated, isBuyer, isLoading: authLoading } = useAuth();
-  const { products: allProducts, loading: productsLoading } = useProducts();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -27,7 +24,7 @@ export default function WishlistPage() {
 
   useEffect(() => {
     // Only run auth check after auth has finished loading
-    if (authLoading || productsLoading) return;
+    if (authLoading) return;
 
     if (!isAuthenticated || !isBuyer) {
       router.push('/login'); // Redirect if not authenticated or not a buyer
@@ -41,46 +38,54 @@ export default function WishlistPage() {
 
     // User is authenticated, load wishlist
     loadWishlist();
-    setLoading(false);
-  }, [
-    isAuthenticated,
-    isBuyer,
-    user,
-    authLoading,
-    productsLoading,
-    allProducts,
-    router,
-    toast,
-  ]);
+  }, [isAuthenticated, isBuyer, user, authLoading, router, toast]);
 
-  const loadWishlist = () => {
+  const loadWishlist = async () => {
     if (!user?._id) return;
 
-    const userWishlist = getWishlist().filter(item => item.userId === user._id);
-    const productsInWishlist = userWishlist
-      .map(item => allProducts.find(p => p._id === item.productId))
-      .filter(Boolean) as Product[];
-    setWishlistProducts(productsInWishlist)
-  }
+    try {
+      setLoading(true);
+      const response = await wishlistApi.getUserWishlist();
+      if (response.success && response.data) {
+        // Extract products from wishlist items (populated productId)
+        const products = response.data
+          .map(item => item.productId)
+          .filter(Boolean) as Product[];
+        setWishlistProducts(products);
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load wishlist. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleRemoveFromWishlist = (productId: string) => {
-    if (!user?._id) return;
+  const removeFromWishlist = async (productId: string) => {
+    try {
+      const response = await wishlistApi.removeFromWishlist(productId);
+      if (response.success) {
+        setWishlistProducts(prev => prev.filter(p => p._id !== productId));
+        toast({
+          title: 'Success',
+          description: 'Product removed from wishlist.',
+        });
+      }
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove product from wishlist.',
+        variant: 'destructive',
+      });
+    }
+  };
 
-    let wishlist = getWishlist()
-    wishlist = wishlist.filter(
-      item => !(item.userId === user._id && item.productId === productId),
-    );
-    setWishlist(wishlist)
-    loadWishlist() // Reload wishlist after removal
-
-    toast({
-      title: "Removed from Wishlist",
-      description: "Product has been removed from your wishlist.",
-      variant: "default",
-    })
-  }
-
-  if (authLoading || productsLoading || loading) {
+  if (authLoading || loading) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin text-agronetGreen' />
@@ -89,7 +94,7 @@ export default function WishlistPage() {
   }
 
   if (!isAuthenticated || !isBuyer) {
-    return null // Should be redirected by useEffect
+    return null; // Should be redirected by useEffect
   }
 
   return (
@@ -133,7 +138,7 @@ export default function WishlistPage() {
                   variant='destructive'
                   size='icon'
                   className='absolute top-2 right-2 rounded-full h-8 w-8'
-                  onClick={() => handleRemoveFromWishlist(product._id)}>
+                  onClick={() => removeFromWishlist(product._id)}>
                   <Trash2 className='h-4 w-4' />
                   <span className='sr-only'>Remove from wishlist</span>
                 </Button>

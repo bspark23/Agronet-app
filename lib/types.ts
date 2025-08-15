@@ -210,7 +210,7 @@ export interface CreateProductForm {
   description: string;
   price: number;
   quantity: number;
-  images: string[];
+  images: (string | File)[];
   location: {
     type: 'Point';
     coordinates: [number, number];
