@@ -47,13 +47,12 @@ export function Navbar() {
             <span className='sr-only'>Toggle navigation</span>
           </Button>
           <Link
-            href="/"
-            className="flex items-center gap-2 font-semibold text-agronetGreen"
-          >
+            href='/'
+            className='flex items-center gap-2 font-semibold text-agronetGreen'>
             <img
-              src="/harvestlink-logo.svg"
-              alt="HarvestLink Logo"
-              className="h-8 w-8"
+              src='/harvestlink-logo.svg'
+              alt='HarvestLink Logo'
+              className='h-8 w-8'
             />
             <span>HarvestLink</span>
           </Link>
@@ -79,7 +78,7 @@ export function Navbar() {
                   className='relative h-8 w-8 rounded-full'>
                   <Avatar className='h-8 w-8'>
                     <AvatarImage
-                      src='/placeholder.svg?height=32&width=32'
+                      src='/public/avatar.png'
                       alt={`${user?.firstname} ${user?.lastname}` || 'User'}
                     />
                     <AvatarFallback>

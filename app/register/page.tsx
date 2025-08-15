@@ -39,7 +39,6 @@ export default function RegisterPage() {
       });
     }
   };
-  };
 
   return (
     <div className='flex min-h-screen items-center justify-center bg-agronetGreen-50 p-4'>
@@ -47,12 +46,23 @@ export default function RegisterPage() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg"
-      >
-        <h1 className="mb-6 text-center text-3xl font-bold text-agronetGreen">
+        className='w-full max-w-md rounded-lg bg-white p-8 shadow-lg'>
+        <h1 className='mb-6 text-center text-3xl font-bold text-agronetGreen'>
           Register for HarvestLink
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div>
+            <Label htmlFor='firstname'>Last Name</Label>
+            <Input
+              id='firstname'
+              type='text'
+              placeholder='John'
+              value={firstname}
+              onChange={e => setFirstname(e.target.value)}
+              required
+            />
+          </div>
+
           <div>
             <Label htmlFor='lastname'>Last Name</Label>
             <Input
@@ -102,6 +112,5 @@ export default function RegisterPage() {
         </p>
       </motion.div>
     </div>
-  );
   );
 }

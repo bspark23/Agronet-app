@@ -25,12 +25,12 @@ export default function ChatsPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!isAuthenticated || !user) {
-        router.push("/login")
+        router.push('/login');
       } else {
-        loadThreads()
+        loadThreads();
       }
     }
-  }, [isAuthenticated, user, authLoading, router, loadThreads])
+  }, [isAuthenticated, user, authLoading, router]);
 
   const getOtherParticipant = (
     thread: MessageThread,

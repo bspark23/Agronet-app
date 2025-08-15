@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
     } else {
       loadData();
     }
-  }, [isAdmin, authLoading, productsLoading, router, toast]);
+  }, [isAdmin, authLoading, productsLoading, router]);
 
   const loadData = async () => {
     try {

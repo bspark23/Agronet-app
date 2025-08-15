@@ -170,31 +170,32 @@ export interface LogisticsCompany {
 }
 
 export interface Order {
-  id: string
-  orderFormId: string
-  buyerId: string
-  sellerId: string
-  productId: string
-  quantity: number
-  totalPrice: number
-  paymentStatus: "pending" | "completed" | "failed"
-  logisticsCompanyId?: string
-  status: "pending" | "paid" | "shipped" | "delivered"
-  createdAt: number
-  paidAt?: number
+  id: string;
+  orderFormId: string;
+  buyerId: string;
+  sellerId: string;
+  productId: string;
+  quantity: number;
+  totalPrice: number;
+  paymentStatus: 'pending' | 'completed' | 'failed';
+  logisticsCompanyId?: string;
+  status: OrderStatus;
+  createdAt: string;
+  paidAt?: number;
 }
 
 export interface LocalStorageData {
-  users: User[]
-  products: Product[]
-  sellerApplications: SellerApplication[]
-  chats: Chat[]
-  wishlist: WishlistItem[]
-  orderForms: OrderForm[]
-  orders: Order[]
-  logisticsCompanies: LogisticsCompany[]
-  loggedInUserId: string | null
-  adminNotification: boolean // Flag for new seller applications
+  users: User[];
+  products: Product[];
+  sellerApplications: FarmerApplication[];
+  chats: Chat[];
+  wishlist: WishlistItem[];
+  orderForms: OrderForm[];
+  orders: Order[];
+  logisticsCompanies: LogisticsCompany[];
+  loggedInUserId: string | null;
+  adminNotification: boolean; // Flag for new seller applications
+}
 export interface RegisterForm {
   firstname: string;
   lastname: string;

@@ -54,12 +54,11 @@ export default function HomePage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-white mb-8 max-w-2xl drop-shadow-md"
-            >
+              className='text-lg md:text-xl text-white mb-8 max-w-2xl drop-shadow-md'>
               Connect directly with local farmers and verified sellers for the
               freshest agricultural products.
             </motion.p>
-            <div className='flex gap-4'>
+            <div className='flex md:flex-row flex-col gap-4'>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -131,8 +130,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold text-agronetGreen mb-6"
-            >
+              className='text-3xl md:text-4xl font-bold text-agronetGreen mb-6'>
               About HarvestLink
             </motion.h2>
             <motion.p
@@ -140,8 +138,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed"
-            >
+              className='text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed'>
               HarvestLink is dedicated to fostering a direct connection between
               consumers and local agricultural producers. Our mission is to
               empower farmers by providing a platform to showcase their fresh,
@@ -170,6 +167,5 @@ export default function HomePage() {
       </main>
       <Footer />
     </div>
-  );
   );
 }
